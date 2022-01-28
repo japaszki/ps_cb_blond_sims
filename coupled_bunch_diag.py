@@ -1,0 +1,263 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 21 15:11:12 2022
+
+@author: JohnG
+"""
+
+import pylab as plt
+import numpy as np
+import os
+from blond.utils import bmath as bm
+from blond.plots.plot import Plot, fig_folder
+import scipy.optimize as opt
+
+
+# def gaussian(x, scale, sigma, mu):
+#     return scale * np.exp(-np.power(x-mu, 2)/(2*sigma**2))
+
+def sine(t, amplitude, frequency, phase):
+    return amplitude * np.sin(2*np.pi*frequency*t + phase)
+
+def sine_fit(xdata, ydata, dt):
+    #Remove DC offset:
+    ydata_nodc = ydata - bm.mean(ydata)
+
+    #Initial guess for amplitude:
+    amp_guess = (max(ydata_nodc) - min(ydata_nodc))/2
+    
+    #Initial guess for frequency peak value of FFT:
+    fft_N = len(ydata_nodc)
+    fft = bm.rfft(ydata_nodc)
+    fft_freq = bm.rfftfreq(fft_N, dt)
+    freq_guess = fft_freq[np.argmax(np.absolute(fft))]
+        
+    #Scan phase and frequency values for best fit to data:
+    N_ph = 100
+    N_freq = 20
+    error = np.empty([N_ph, N_freq])
+    ph = np.linspace(0, 2*np.pi, N_ph)
+    #Frequency scan range is plus or minus one FFT bin from FFT peak:
+    freq = np.linspace(freq_guess - fft_freq[1], freq_guess + fft_freq[1], N_freq)
+    for j in range(N_freq):
+        for k in range(N_ph):
+            sine_vals = sine(xdata, amp_guess, freq[j], ph[k])
+            error[k,j] = np.sum(np.power(sine_vals - ydata_nodc, 2))
+        
+    #Find phase and frequency that gave least sum of squares error:
+    fit_indices = np.unravel_index(error.argmin(), error.shape)
+    ph_fit = ph[fit_indices[0]]
+    freq_fit = freq[fit_indices[1]]
+    #Use guessed amplitude as final amplitude for now:
+    amp_fit = amp_guess
+    
+    return [amp_fit, freq_fit, ph_fit]
+
+
+def bunch_statistics(dt, dE, method='mean_std'):
+    if dt.size == 0 or dE.size == 0:
+        return {'dt_mean' : np.NaN, 'dt_std' : np.NaN, \
+                  'dE_mean' : np.NaN, 'dE_std' : np.NaN}
+    else:
+        dt_mean = bm.mean(dt)
+        dt_std = bm.std(dt)
+        dE_mean = bm.mean(dE)
+        dE_std = bm.std(dE)
+    
+        if method == 'mean_std':
+            result = {'dt_mean' : dt_mean, 'dt_std' : dt_std, \
+                      'dE_mean' : dE_mean, 'dE_std' : dE_std}    
+        # elif method == 'gaussian':
+            # Need to perform binning first.
+            # opt.curve_fit(gaussian, )
+            
+        return result
+
+
+class coupled_bunch_diag:
+    def __init__(self, beam, ring, tracker, cbfb, format_options, harmonic_number, dt, N_t):
+        self.beam = beam
+        self.ring = ring
+        self.tracker = tracker
+        self.cbfb = cbfb
+        self.harmonic_number = harmonic_number
+        self.dt = dt
+        self.N_t = N_t
+        
+        N_lines = int(np.ceil(N_t / dt) + 1)
+        self.turn_vec = np.array([self.dt * i for i in range(N_lines)])
+        self.bunch_pos_dt = np.empty([harmonic_number, N_lines])
+        self.bunch_pos_dE = np.empty([harmonic_number, N_lines])
+        self.bunch_width_dt = np.empty([harmonic_number, N_lines])
+        self.bunch_width_dE = np.empty([harmonic_number, N_lines])
+        
+        if format_options == None:
+            format_options = {'dummy': 0} 
+
+        if 'dirname' not in format_options:  
+            self.dirname = 'fig'
+        else: 
+            self.dirname = format_options['dirname']
+            
+        fig_folder(self.dirname)
+            
+    def track(self):
+        #Get current turn from tracker:
+        turn = self.tracker.RingAndRFSection_list[0].counter[0]
+        bucket_length = self.ring.t_rev[turn] / self.harmonic_number
+        bucket_centre = [(i+0.5) * bucket_length for i in range(self.harmonic_number)]
+
+        #Record data if sampling on this turn:
+        if (turn % self.dt) == 0:
+            line = int(turn / self.dt)
+            
+            for i in range(self.harmonic_number):
+                #Pick particles in this bucket:
+                particle_indices = (self.beam.dt >= i * bucket_length) & (self.beam.dt < (i+1) * bucket_length)
+                
+                #Obtain statistics of each bunch:
+                bunch_result = bunch_statistics(self.beam.dt[particle_indices], \
+                                                self.beam.dE[particle_indices], method='mean_std')
+                self.bunch_pos_dt[i, line] = bunch_result['dt_mean']
+                self.bunch_width_dt[i, line] = 2 * bunch_result['dt_std']
+                self.bunch_pos_dE[i, line] = bunch_result['dE_mean']
+                self.bunch_width_dE[i, line] = 2 * bunch_result['dE_std']
+                  
+            #Plot bunch energy deviation vs kick:    
+            plt.figure('bunch_dE', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
+            ax.plot(bucket_centre, self.bunch_pos_dE[:,line], label='Mean bunch energy offset')
+            ax.plot(self.cbfb.profile.bin_centers, 100*self.cbfb.dipole_channels[0].upmix_out, label='100x CBFB ch 1 output')
+            ax.set_xlabel("Time [s]")
+            ax.set_ylabel("dE [eV]")
+            plt.title('Turn = ' + str(turn))
+            ax.legend()
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/bunch_dE_turn_' + str(turn) + '.png')
+            plt.clf()
+    
+    def plot_size_width(self, start_turn, end_turn): 
+        turn_indices = (self.turn_vec >= start_turn) & (self.turn_vec < end_turn)
+        bunch_mean_pos_dt = [bm.mean(self.bunch_pos_dt[i,turn_indices]) for i in range(self.harmonic_number)]
+        
+        #Plot bunch position vs time:
+        for i in range(self.harmonic_number):
+            plt.figure('bunch_pos', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+            ax.plot(self.turn_vec[turn_indices], self.bunch_pos_dt[i,turn_indices] - bunch_mean_pos_dt[i])
+            ax.set_xlabel("Turn")
+            ax.set_ylabel("Bunch relative position")
+            plt.title('Bunch ' + str(i))
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/bunch_' + str(i) + '_offset.png')
+            plt.clf()
+        
+        #Plot bunch width vs time:
+        for i in range(self.harmonic_number):
+            plt.figure('bunch_width', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+            ax.plot(self.turn_vec[turn_indices], self.bunch_width_dt[i,turn_indices])
+            ax.set_xlabel("Turn")
+            ax.set_ylabel("Bunch width")
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.title('Bunch ' + str(i))        
+            plt.savefig(self.dirname + '/bunch_' + str(i) + '_width.png')
+            plt.clf()
+        
+    def mode_analysis(self, start_turn, end_turn):
+        #fit to sinousoid of constant amplitude and frequency.
+        #output fitted frequency
+        #separate analysis on bunch widths and positions.
+        turn_indices = (self.turn_vec >= start_turn) & (self.turn_vec < end_turn)
+        
+        pos_amp_fit = np.empty(self.harmonic_number)
+        pos_freq_fit = np.empty(self.harmonic_number)
+        pos_ph_fit = np.empty(self.harmonic_number)
+        width_amp_fit = np.empty(self.harmonic_number)
+        width_freq_fit = np.empty(self.harmonic_number)
+        width_ph_fit = np.empty(self.harmonic_number)
+        
+        #Fit sinusoids to bunch positions and widths:
+        for i in range(self.harmonic_number):
+            pos_data = self.bunch_pos_dt[i,turn_indices]
+            width_data = self.bunch_width_dt[i,turn_indices]
+            
+            [pos_amp_fit[i], pos_freq_fit[i], pos_ph_fit[i]] = sine_fit(self.turn_vec[turn_indices], pos_data, self.dt)
+            [width_amp_fit[i], width_freq_fit[i], width_ph_fit[i]] = sine_fit(self.turn_vec[turn_indices], width_data, self.dt)
+            
+                
+            plt.figure('bunch_pos_fit', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+            ax.plot(self.turn_vec[turn_indices], pos_data, label='Data')
+            ax.plot(self.turn_vec[turn_indices], \
+                    sine(self.turn_vec[turn_indices], pos_amp_fit[i], pos_freq_fit[i], pos_ph_fit[i]) +\
+                        bm.mean(pos_data), label='Fit')
+            ax.set_xlabel("Turn")
+            ax.set_ylabel("Bunch relative position")
+            plt.legend(loc=0, fontsize='medium')
+            plt.title('Bunch ' + str(i))
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/bunch_' + str(i) + '_offset_fit.png')
+            plt.clf()
+            
+            plt.figure('bunch_width_fit', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+            ax.plot(self.turn_vec[turn_indices], width_data, label='Data')
+            ax.plot(self.turn_vec[turn_indices], \
+                    sine(self.turn_vec[turn_indices], width_amp_fit[i], width_freq_fit[i], width_ph_fit[i]) +\
+                    bm.mean(width_data), label='Fit')
+            ax.set_xlabel("Turn")
+            ax.set_ylabel("Bunch width")
+            plt.legend(loc=0, fontsize='medium')
+            plt.title('Bunch ' + str(i))
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/bunch_' + str(i) + '_width_fit.png')
+            plt.clf()
+          
+        pos_complex = np.multiply(pos_amp_fit, np.exp(1j * pos_ph_fit))
+        width_complex = np.multiply(width_amp_fit, np.exp(1j * width_ph_fit))
+        
+        pos_mode_spectrum = np.fft.fft(pos_complex) / self.harmonic_number
+        width_mode_spectrum = np.fft.fft(width_complex) / self.harmonic_number
+        
+        plt.figure('bunch_pos_phases', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        ax.plot(pos_ph_fit)
+        ax.set_xlabel("Bunch")
+        ax.set_ylabel("Phase [rad]")
+        plt.title('Bunch position oscillation')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(self.dirname + '/bunch_pos_phases.png')
+        plt.clf()
+        
+        plt.figure('bunch_width_phases', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        ax.plot(pos_ph_fit)
+        ax.set_xlabel("Bunch")
+        ax.set_ylabel("Phase [rad]")
+        plt.title('Bunch width oscillation')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(self.dirname + '/bunch_width_phases.png')
+        plt.clf()
+        
+        plt.figure('bunch_pos_fft', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        ax.bar([x for x in range(self.harmonic_number)], np.absolute(pos_mode_spectrum))
+        ax.set_xlabel("Mode")
+        ax.set_ylabel("Amplitude [s]")
+        plt.title('Bunch position oscillation')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(self.dirname + '/bunch_pos_modes.png')
+        plt.clf()
+        
+        plt.figure('bunch_width_fft', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        ax.bar([x for x in range(self.harmonic_number)], np.absolute(width_mode_spectrum))
+        ax.set_xlabel("Mode")
+        ax.set_ylabel("Amplitude [s]")
+        plt.title('Bunch width oscillation')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.savefig(self.dirname + '/bunch_width_modes.png')
+        plt.clf()
+            
+        return [pos_mode_spectrum, width_mode_spectrum]
