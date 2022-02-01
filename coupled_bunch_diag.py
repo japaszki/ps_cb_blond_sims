@@ -7,10 +7,10 @@ Created on Fri Jan 21 15:11:12 2022
 
 import pylab as plt
 import numpy as np
-import os
+# import os
 from blond.utils import bmath as bm
-from blond.plots.plot import Plot, fig_folder
-import scipy.optimize as opt
+from blond.plots.plot import fig_folder
+# import scipy.optimize as opt
 
 
 # def gaussian(x, scale, sigma, mu):
@@ -33,7 +33,7 @@ def sine_fit(xdata, ydata, dt):
     freq_guess = fft_freq[np.argmax(np.absolute(fft))]
         
     #Scan phase and frequency values for best fit to data:
-    N_ph = 100
+    N_ph = 200
     N_freq = 20
     error = np.empty([N_ph, N_freq])
     ph = np.linspace(0, 2*np.pi, N_ph)
@@ -49,7 +49,18 @@ def sine_fit(xdata, ydata, dt):
     ph_fit = ph[fit_indices[0]]
     freq_fit = freq[fit_indices[1]]
     #Use guessed amplitude as final amplitude for now:
-    amp_fit = amp_guess
+    
+    #Fit amplitude:
+    N_amp = 50
+    error = np.empty(N_amp)
+    amp = amp_guess * np.logspace(-0.5, 0.1, N_amp)
+    for j in range(N_amp):
+        sine_vals = sine(xdata, amp[j], freq_fit, ph_fit)
+        error[j] = np.sum(np.power(sine_vals - ydata_nodc, 2))
+        
+    amp_fit = amp[error.argmin()]
+    
+    # amp_fit = amp_guess
     
     return [amp_fit, freq_fit, ph_fit]
 
@@ -75,13 +86,14 @@ def bunch_statistics(dt, dE, method='mean_std'):
 
 
 class coupled_bunch_diag:
-    def __init__(self, beam, ring, tracker, cbfb, format_options, harmonic_number, dt, N_t):
+    def __init__(self, beam, ring, tracker, cbfb, format_options, harmonic_number, dt, plot_dt, N_t):
         self.beam = beam
         self.ring = ring
         self.tracker = tracker
         self.cbfb = cbfb
         self.harmonic_number = harmonic_number
         self.dt = dt
+        self.plot_dt = plot_dt
         self.N_t = N_t
         
         N_lines = int(np.ceil(N_t / dt) + 1)
@@ -122,7 +134,10 @@ class coupled_bunch_diag:
                 self.bunch_width_dt[i, line] = 2 * bunch_result['dt_std']
                 self.bunch_pos_dE[i, line] = bunch_result['dE_mean']
                 self.bunch_width_dE[i, line] = 2 * bunch_result['dE_std']
-                  
+        
+        if (turn % self.plot_dt) == 0:
+            line = int(turn / self.dt)
+                
             #Plot bunch energy deviation vs kick:    
             plt.figure('bunch_dE', figsize=(8,6))
             ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
