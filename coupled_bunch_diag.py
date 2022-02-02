@@ -142,7 +142,7 @@ class coupled_bunch_diag:
             plt.figure('bunch_dE', figsize=(8,6))
             ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
             ax.plot(bucket_centre, self.bunch_pos_dE[:,line], label='Mean bunch energy offset')
-            ax.plot(self.cbfb.profile.bin_centers, 100*self.cbfb.dipole_channels[0].upmix_out, label='100x CBFB ch 1 output')
+            ax.plot(self.cbfb.output_sample_times, 100*self.cbfb.dipole_channels[0].upmix_out, label='100x CBFB ch 1 output')
             ax.set_xlabel("Time [s]")
             ax.set_ylabel("dE [eV]")
             plt.title('Turn = ' + str(turn))

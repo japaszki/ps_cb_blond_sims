@@ -30,6 +30,9 @@ class feedback:
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
                     cut_right=ring.t_rev[turn], n_slices=self.h_samp))
         
+        #Time values corresponing to output samples:
+        self.output_sample_times = np.linspace(0, self.ring.t_rev[turn] * (self.h_samp - 1) / self.h_samp, self.h_samp)
+        
         #Initialise each channel:
         self.dipole_channels = []
         for i in range(self.N_channels):
@@ -52,6 +55,9 @@ class feedback:
             #Sum outputs of all active channels:
             if self.active[i]:
                 self.cbfb_output_sum += cbfb_channel_output
+        
+        #Time values corresponing to output samples:
+        self.output_sample_times = np.linspace(0, self.ring.t_rev[turn] * (self.h_samp - 1) / self.h_samp, self.h_samp)
             
         #Rasterise particle times to sample clock:
         particle_time_sampled = np.floor(self.beam.dt * self.h_samp / self.ring.t_rev[turn])

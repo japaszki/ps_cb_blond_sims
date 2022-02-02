@@ -27,17 +27,22 @@ class feedback_peak_det:
         self.beam = beam
         
         #Sampling of beam signal:
+        self.h_samp = 64
         self.h_samp_pkdet = 256
         self.pkdet_decim = 4
         turn = self.tracker.RingAndRFSection_list[0].counter
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
+                    cut_right=ring.t_rev[turn], n_slices=self.h_samp))
+        
+        self.profile_pkdet = Profile(self.beam, CutOptions(cut_left=0, 
                     cut_right=ring.t_rev[turn], n_slices=self.h_samp_pkdet))
+        self.beam_signal_pkdet = np.zeros(self.h_samp)
         
         #Initialise peak detector:
         self.peak_filter = peak_filter.peak_filter(2)
         
         #Initialise each channel:
-        self.h_samp = 64
+        
         self.dipole_channels = []
         for i in range(self.N_channels):
             self.dipole_channels.append(dipole_channel(h_in[i], h_out[i], gain[i], sideband_swap[i]))
@@ -49,7 +54,10 @@ class feedback_peak_det:
         #Simulate sampling with beam-synchronous clock:
         self.profile.cut_right = self.ring.t_rev[turn]
         self.profile.track()
-        self.beam_signal = self.beam.ratio * self.profile.n_macroparticles
+        
+        self.profile_pkdet.cut_right = self.ring.t_rev[turn]
+        self.profile_pkdet.track()
+        self.beam_signal = self.beam.ratio * self.profile_pkdet.n_macroparticles
         
         #Decimate with peak detection:
         for i in range(self.h_samp):

@@ -92,11 +92,11 @@ params.fft_span_around_harmonic = 2000
 this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 results_dir = 'output_files/cbfb_gain_phase_scan/'
 
-N_phases = 20
-phase_vals = np.linspace(0, 2*np.pi, N_phases)
+N_phases = 4
+phase_vals = np.linspace(0.15, 0.25, N_phases)
 
-N_gains = 4
-gain_vals = np.logspace(-4, -2, N_gains)
+N_gains = 1
+gain_vals = [1e-3]#np.logspace(-3, -2, N_gains)
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
