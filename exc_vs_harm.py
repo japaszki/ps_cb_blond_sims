@@ -15,6 +15,8 @@ import pylab as plt
 import pickle
 import os
 from run_cb_sim import run_cb_sim
+import cavity_model
+from scipy.constants import m_p ,c, e
 
 
 class sim_params:
@@ -30,7 +32,7 @@ params.N_t = 10000     # Number of turns to track
 # Beam parameters
 params.n_particles = 1e10
 params.n_macroparticles = 1e3
-params.sync_momentum = 25.92e9 # [eV]
+params.sync_momentum = 15e9 # [eV]
                         
 # Machine and RF parameters
 radius = 100.0
@@ -40,7 +42,7 @@ params.circumference = 2 * np.pi * radius  # [m]
 # Cavities parameters
 params.n_rf_systems = 1
 params.harmonic_number = 21
-params.voltage_program = 200e3
+params.voltage_program = 168e3
 params.phi_offset = 0
 
 #Wake impedance
@@ -50,18 +52,29 @@ params.wake_Q = 100
 #Beam parameters:
 params.n_bunches = 21
 params.bunch_spacing_buckets = 1
-params.bunch_length = 15e-9
-params.intensity_list = [1e11] * params.n_bunches
-params.minimum_n_macroparticles = [4e3] * params.n_bunches
+params.bunch_length = 4*2/c
+params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
+params.minimum_n_macroparticles = [1e4] * params.n_bunches
 
-params.cbfb_N_chans = 1
-params.cbfb_h_in = [20]
-params.cbfb_h_out = [1]
-params.cbfb_active = [False]
-params.cbfb_sideband_swap = [True]
+params.cbfb_params = {'N_channels' : 1,
+                      'h_in' : [20],
+                      'h_out' : [1],
+                      'active' : [False],
+                      'sideband_swap' : [True],
+                      'gain' : [np.zeros(params.N_t+1, complex)]}
 
-params.cbfb_gain_vec = [np.zeros(params.N_t+1, complex)]
-params.cbfb_gain_vec[0][:] = 1e-3 * np.exp(2j * np.pi * 0.26)
+params.cbfb_params['gain'][0][:] = 1e-3 * np.exp(2j * np.pi * 0.26)
+
+finemet_dt = 5e-9
+finemet_f0 = 1.96e6
+finemet_Q = 0.49
+# finemet_h = cavity_model.resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt, 100)
+
+params.rf_params = {'dt' : finemet_dt, 
+                    'impulse_response' : np.ones(1), 
+                    'max_voltage' : 1e5, 
+                    'output_delay' : 1e-8,
+                    'history_length' : 1e-6}
 
 params.start_cbfb_turn = 15000
 params.end_cbfb_turn = 20000
@@ -88,11 +101,16 @@ params.fft_end_turn = 10000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 2000
 
+params.mode_analysis_window = 4000
+params.mode_analysis_resolution = 2000
+params.N_plt_modes = 4
+
 
 this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 results_dir = 'output_files/exc_harm_scan/'
 
 exc_harm_runs = [1, 20, 22, 41, 43, 62, 64, 83, 85, 104, 106, 125, 127, 146, 148]
+# exc_harm_runs = [2, 19, 23, 40, 44, 61, 65, 83, 86, 103, 107, 124, 128, 145, 149]
 N_runs = len(exc_harm_runs)
 
 #Dipole excitation at given harmonic:

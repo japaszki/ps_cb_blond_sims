@@ -10,7 +10,8 @@ from blond.utils import bmath as bm
 import numpy as np
 import cic
 import iir
-import peak_filter
+import scipy.signal
+import scipy.interpolate
 
 
 class feedback_peak_det:
@@ -27,22 +28,20 @@ class feedback_peak_det:
         self.beam = beam
         
         #Sampling of beam signal:
-        self.h_samp = 64
-        self.h_samp_pkdet = 256
-        self.pkdet_decim = 4
+        self.h_samp = 256#64
+        self.samples_per_bucket = 10
+        self.harmonic_number = 21
+        self.h_samp_pkdet = self.samples_per_bucket * self.harmonic_number
+        
         turn = self.tracker.RingAndRFSection_list[0].counter
+        
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
-                    cut_right=ring.t_rev[turn], n_slices=self.h_samp))
-        
-        self.profile_pkdet = Profile(self.beam, CutOptions(cut_left=0, 
                     cut_right=ring.t_rev[turn], n_slices=self.h_samp_pkdet))
-        self.beam_signal_pkdet = np.zeros(self.h_samp)
         
-        #Initialise peak detector:
-        self.peak_filter = peak_filter.peak_filter(2)
+        self.beam_signal_pkdet = np.zeros(self.h_samp_pkdet)
+        self.beam_signal_pkdet_resamp = np.zeros(self.h_samp)
         
         #Initialise each channel:
-        
         self.dipole_channels = []
         for i in range(self.N_channels):
             self.dipole_channels.append(dipole_channel(h_in[i], h_out[i], gain[i], sideband_swap[i]))
@@ -53,33 +52,50 @@ class feedback_peak_det:
         
         #Simulate sampling with beam-synchronous clock:
         self.profile.cut_right = self.ring.t_rev[turn]
+        self.profile.set_slices_parameters()
         self.profile.track()
+        self.beam_signal = self.beam.ratio * self.profile.n_macroparticles
         
-        self.profile_pkdet.cut_right = self.ring.t_rev[turn]
-        self.profile_pkdet.track()
-        self.beam_signal = self.beam.ratio * self.profile_pkdet.n_macroparticles
-        
-        #Decimate with peak detection:
-        for i in range(self.h_samp):
-            self.beam_signal_pkdet[i] = self.peak_filter.update(self.beam_signal[self.pkdet_decim*i:self.pkdet_decim*(i+1)])
-        
+        #Perform peak detection per bucket:
+        for i in range(self.harmonic_number):
+            bucket_indices = range(i*self.samples_per_bucket, (i+1)*self.samples_per_bucket)
+            self.beam_signal_pkdet[bucket_indices] = np.max(self.beam_signal[bucket_indices])
+            
+        #Resample to h64:
+        self.beam_signal_pkdet_resamp = scipy.signal.resample(self.beam_signal_pkdet, self.h_samp)
+            
         #Update each channel:
         self.cbfb_output_sum = np.zeros(self.h_samp)
+        self.cbfb_output_sum_all_chans = np.zeros(self.h_samp)
         for i in range(self.N_channels):
-            cbfb_channel_output = self.dipole_channels[i].update_output(turn, self.beam_signal_pkdet)
+            cbfb_channel_output = self.dipole_channels[i].update_output(turn, self.beam_signal_pkdet_resamp)
+            
+            #Sum outputs of all channels:
+            self.cbfb_output_sum_all_chans += cbfb_channel_output
             
             #Sum outputs of all active channels:
             if self.active[i]:
                 self.cbfb_output_sum += cbfb_channel_output
-            
-        #Rasterise particle times to sample clock:
-        particle_time_sampled = np.floor(self.beam.dt * self.h_samp / self.ring.t_rev[turn])
-        time_indices = particle_time_sampled.astype(int)
-        indices_mask = (time_indices >= 0) & (time_indices < self.h_samp) #only apply kick to particles within turn
-            
-        #Apply kick to particles:
-        self.beam.dE[indices_mask] += self.cbfb_output_sum[time_indices[indices_mask]]
+          
+        #h21 modulation of output:
+        mod_nco_phase = 2*np.pi*np.arange(self.h_samp)/self.h_samp
+        mod_lo = np.sin(self.harmonic_number * mod_nco_phase)
+        self.output_sum_mod = bm.mul(self.cbfb_output_sum, mod_lo)
+        self.output_sum_mod_all_chans = bm.mul(self.cbfb_output_sum_all_chans, mod_lo)
         
+        #Perform cubic interpolation of h64 output to simulate finite bandwidth of high power system:
+        self.sample_times = np.linspace(0, self.ring.t_rev[turn] * (self.h_samp - 1) / self.h_samp, self.h_samp)
+        # self.output_spline = scipy.interpolate.CubicSpline(self.sample_times, self.cbfb_output_sum)
+        # self.output_spline_all_chans = scipy.interpolate.CubicSpline(self.sample_times, self.cbfb_output_sum_all_chans)
+        
+        self.output_spline = scipy.interpolate.CubicSpline(self.sample_times, self.output_sum_mod)
+        self.output_spline_all_chans = scipy.interpolate.CubicSpline(self.sample_times, self.output_sum_mod_all_chans)
+        
+        #Ignore particles not within this turn:
+        particle_mask = (self.beam.dt >= 0) & (self.beam.dt < self.ring.t_rev[turn])
+        
+        #Apply kick to particles:
+        self.beam.dE[particle_mask] += self.output_spline(self.beam.dt[particle_mask])
 
 class dipole_channel:
     def __init__(self, h_in, h_out, gain, sideband_swap):        
@@ -94,7 +110,7 @@ class dipole_channel:
         
         #Baseband filter properties:
         self.cic_n = 2
-        self.cic_r = 64
+        self.cic_r = 256#64
         self.cic_m = 4
         
         self.decim_i = cic.mov_avg_decim(self.cic_n, self.cic_r, self.cic_m)
@@ -103,15 +119,15 @@ class dipole_channel:
         self.interp_q = cic.mov_avg_interp(self.cic_n, self.cic_r, self.cic_m)
         self.cic_decim_out = 0
         
-        self.h_samp = 64
+        self.h_samp = 256#64
         
     def update_output(self, turn, beam_signal):
         #Generate NCO phase values for 1 turn:
-        nco_phase = 2*np.pi*np.arange(self.h_samp)/self.h_samp
+        self.nco_phase = 2*np.pi*np.arange(self.h_samp)/self.h_samp
         
         #Downmix input signal at selected harmonic:
-        self.downmix_lo_i = np.cos(self.h_in * nco_phase)
-        self.downmix_lo_q = np.sin(self.h_in * nco_phase)
+        self.downmix_lo_i = np.cos(self.h_in * self.nco_phase)
+        self.downmix_lo_q = np.sin(self.h_in * self.nco_phase)
         self.downmix_out_i = bm.mul(beam_signal, self.downmix_lo_i)
         self.downmix_out_q = bm.mul(beam_signal, self.downmix_lo_q)
         
@@ -138,15 +154,15 @@ class dipole_channel:
         interp_out_q = self.interp_q.update(np.imag(gain_ctrl_out))
         
         #Upmix to output harmonic number:
-        upmix_lo_i = np.cos(self.h_out * nco_phase)
-        upmix_lo_q = np.sin(self.h_out * nco_phase)
+        self.upmix_lo_i = np.cos(self.h_out * self.nco_phase)
+        self.upmix_lo_q = np.sin(self.h_out * self.nco_phase)
         
         if self.sideband_swap:
-            self.upmix_out = bm.add(bm.mul(interp_out_i, upmix_lo_q), \
-                               bm.mul(interp_out_q, upmix_lo_i))
+            self.upmix_out = bm.add(bm.mul(interp_out_i, self.upmix_lo_q), \
+                               bm.mul(interp_out_q, self.upmix_lo_i))
         else:
-            self.upmix_out = bm.add(bm.mul(interp_out_i, upmix_lo_i), \
-                               bm.mul(interp_out_q, upmix_lo_q))
+            self.upmix_out = bm.add(bm.mul(interp_out_i, self.upmix_lo_i), \
+                               bm.mul(interp_out_q, self.upmix_lo_q))
         
         return self.upmix_out
         

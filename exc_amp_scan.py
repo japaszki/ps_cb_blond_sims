@@ -88,6 +88,10 @@ params.fft_end_turn = 10000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 2000
 
+params.mode_analysis_window = 4000
+params.mode_analysis_resolution = 2000
+params.N_plt_modes = 4
+
 
 this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 results_dir = 'output_files/exc_amp_scan/'

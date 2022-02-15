@@ -15,6 +15,8 @@ import pylab as plt
 import pickle
 import os
 from run_cb_sim import run_cb_sim
+import cavity_model
+from scipy.constants import m_p ,c, e
 
 
 class sim_params:
@@ -30,7 +32,7 @@ params.N_t = 16000     # Number of turns to track
 # Beam parameters
 params.n_particles = 1e10
 params.n_macroparticles = 1e3
-params.sync_momentum = 25.92e9 # [eV]
+params.sync_momentum = 15e9#25.92e9 # [eV]
                         
 # Machine and RF parameters
 radius = 100.0
@@ -40,7 +42,7 @@ params.circumference = 2 * np.pi * radius  # [m]
 # Cavities parameters
 params.n_rf_systems = 1
 params.harmonic_number = 21
-params.voltage_program = 200e3
+params.voltage_program = 168e3
 params.phi_offset = 0
 
 #Wake impedance
@@ -50,17 +52,27 @@ params.wake_Q = 100
 #Beam parameters:
 params.n_bunches = 21
 params.bunch_spacing_buckets = 1
-params.bunch_length = 15e-9
-params.intensity_list = [1e11] * params.n_bunches
+params.bunch_length = 4*2/c
+params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [4e3] * params.n_bunches
 
-params.cbfb_N_chans = 1
-params.cbfb_h_in = [20]
-params.cbfb_h_out = [1]
-params.cbfb_active = [False]
-params.cbfb_sideband_swap = [True]
+params.cbfb_params = {'N_channels' : 1,
+                      'h_in' : [20],
+                      'h_out' : [20],
+                      'active' : [False],
+                      'sideband_swap' : [False],
+                      'gain' : [np.zeros(params.N_t+1, complex)]}
 
-params.cbfb_gain_vec = [np.zeros(params.N_t+1, complex)]
+finemet_dt = 5e-9
+finemet_f0 = 1.96e6
+finemet_Q = 0.49
+finemet_h = cavity_model.resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt, 100)
+
+params.rf_params = {'dt' : finemet_dt, 
+                    'impulse_response' : finemet_h, 
+                    'max_voltage' : 1e5, 
+                    'output_delay' : 1e-8,
+                    'history_length' : 1e-3}
 
 params.start_cbfb_turn = 8000
 params.end_cbfb_turn = 12000
@@ -73,7 +85,7 @@ params.fb_diag_start_delay = 100
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
 params.exc_v[0:6000] = 1.5e3
-params.fs_exc = 387.29
+params.fs_exc = 442.07
 params.exc_harmonic = 20
 
 #Simulation parameters
@@ -88,15 +100,20 @@ params.fft_end_turn = 16000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 2000
 
+params.mode_analysis_window = 4000
+params.mode_analysis_resolution = 2000
+params.N_plt_modes = 4
+
 
 this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 results_dir = 'output_files/cbfb_gain_phase_scan/'
 
-N_phases = 4
-phase_vals = np.linspace(0.15, 0.25, N_phases)
+N_phases = 16
+phase_vals = np.linspace(0, 2*np.pi, N_phases)
 
-N_gains = 1
-gain_vals = [1e-3]#np.logspace(-3, -2, N_gains)
+N_gains = 3
+gain_vals = [1e-4, 3e-4, 1e-3]
+
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
@@ -112,7 +129,7 @@ for run in range(N_runs):
     subdir = 'dipole_exc_cbfb_gain_' + str(cbfb_gain_runs[run]) + '_phase_' + str(cbfb_phase_runs[run])
     params.output_dir = this_directory + results_dir + subdir + '/'
     params.exc_delta_freq = params.fs_exc
-    params.cbfb_gain_vec[0][:] = cbfb_gain_runs[run] * np.exp(2j * np.pi * cbfb_phase_runs[run])
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
     
     [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
      pos_mode_amp, width_mode_amp] = run_cb_sim(params)
@@ -135,7 +152,7 @@ for run in range(N_runs):
     subdir = 'quad_exc_cbfb_gain_' + str(cbfb_gain_runs[run]) + '_phase_' + str(cbfb_phase_runs[run])
     params.output_dir = this_directory + results_dir + subdir + '/'
     params.exc_delta_freq = 2*params.fs_exc
-    params.cbfb_gain_vec[0][:] = cbfb_gain_runs[run] * np.exp(2j * np.pi * cbfb_phase_runs[run])
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(2j * np.pi * cbfb_phase_runs[run])
     
     [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
      pos_mode_amp, width_mode_amp] = run_cb_sim(params)
@@ -191,19 +208,21 @@ for run in range(N_runs):
 plt.figure('dipole_amp_vs_phase')
 for i in range(N_gains):
     plot_indices = (cbfb_gain_runs == gain_vals[i])
-    plt.plot(phase_vals, dipole_exc_pos_amp[plot_indices] /\
+    plt.semilogy(phase_vals, dipole_exc_pos_amp[plot_indices] /\
              dipole_exc_pos_amp[0], label='Gain = ' + str(gain_vals[i]))
 plt.legend(loc=0, fontsize='medium')
 plt.xlabel('CBFB phase [rad]')
 plt.ylabel('Relative oscillation amplitude')
-plt.savefig(this_directory + 'output_files/' + 'dipole_amp_vs_phase.png')
+plt.title('Dipole mode')
+plt.savefig(this_directory + results_dir + 'dipole_amp_vs_phase.png')
 
 plt.figure('quad_amp_vs_phase')
 for i in range(N_gains):
     plot_indices = (cbfb_gain_runs == gain_vals[i])
-    plt.plot(phase_vals, quad_exc_width_amp[plot_indices] /\
+    plt.semilogy(phase_vals, quad_exc_width_amp[plot_indices] /\
              quad_exc_width_amp[0], label='Gain = ' + str(gain_vals[i]))
 plt.legend(loc=0, fontsize='medium')
 plt.xlabel('CBFB phase [rad]')
 plt.ylabel('Relative oscillation amplitude')
-plt.savefig(this_directory + 'output_files/' + 'dipole_amp_vs_phase.png')
+plt.title('Quadrupole mode')
+plt.savefig(this_directory + results_dir + 'quad_amp_vs_phase.png')

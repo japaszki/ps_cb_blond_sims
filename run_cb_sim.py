@@ -100,12 +100,25 @@ def run_cb_sim(params):
     
     
     #Set up coupled-bunch feedback parameters:
-    fb = cbfb.feedback(beam, ring, full_tracker, params.cbfb_N_chans, params.cbfb_h_in, params.cbfb_h_out, \
-                       params.cbfb_gain_vec, params.cbfb_active, params.cbfb_sideband_swap)
+    fb = cbfb.feedback(beam, ring, full_tracker, params.cbfb_params, params.rf_params)
         
     fb_diag = cbd.coupled_bunch_diag(beam, ring, full_tracker, fb,\
                                      {'dirname': params.output_dir + 'cb_plots/'}, \
                                      params.harmonic_number, params.fb_diag_dt, params.fb_diag_plot_dt, params.N_t)
+        
+    plt.figure('finemet_impulse_response')
+    plt.plot(np.arange(params.rf_params['impulse_response'].shape[0]) * params.rf_params['dt'],\
+             params.rf_params['impulse_response'])
+    plt.xlabel('Time [s]')
+    plt.ylabel('Finemet impulse response')
+    plt.savefig(params.output_dir + 'finemet_impulse_response.png')
+    
+    plt.figure('finemet_transfer_function')
+    plt.semilogx(np.fft.rfftfreq(params.rf_params['impulse_response'].shape[0], params.rf_params['dt']),\
+             np.absolute(np.fft.rfft(params.rf_params['impulse_response'])))
+    plt.xlabel('Frequency [Hz]')
+    plt.ylabel('Finemet frequency response')
+    plt.savefig(params.output_dir + 'finemet_frequency_response.png')
     
     # Accelerator map
     map_ = [full_tracker] + [tomo_profile] + [long_fft_profile] + \
@@ -131,12 +144,12 @@ def run_cb_sim(params):
         cbfb_baseband_vec.append(fb.dipole_channels[0].cic_decim_out)
         
         if turn == params.start_cbfb_turn:
-            for channel in range(params.cbfb_N_chans):
+            for channel in range(params.cbfb_params['N_channels']):
                 if params.cbfb_active_mask[channel]:
                     fb.active[channel] = True
         
         if turn == params.end_cbfb_turn:
-            for channel in range(params.cbfb_N_chans):
+            for channel in range(params.cbfb_params['N_channels']):
                 fb.active[channel] = False
         
         #Collect data for long FFT
@@ -240,7 +253,10 @@ def run_cb_sim(params):
     
     #Plot bunch width and position history
     fb_diag.plot_size_width(params.fb_diag_start_delay, params.N_t)
-    [pos_mode_spectrum, width_mode_spectrum] = fb_diag.mode_analysis(params.fft_start_turn, params.fft_end_turn)
+    [pos_mode_spectrum, width_mode_spectrum] = fb_diag.mode_analysis(params.fft_start_turn, params.fft_end_turn, True)
+    
+    fb_diag.modes_vs_time(params.fb_diag_start_delay, params.N_t,\
+                          params.mode_analysis_window, params.mode_analysis_resolution, params.N_plt_modes)
     
     #Get magnitudes of desired modes:                             
     pos_mode_amp = [np.absolute(pos_mode_spectrum[m]) for m in range(params.harmonic_number)]
