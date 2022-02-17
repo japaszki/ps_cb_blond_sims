@@ -11,8 +11,8 @@ from __future__ import print_function
 
 import sys
 sys.path.append('/blond')
-# sys.path.append('/blond/blond/utils')
-# sys.path.append('/blond/blond/impedances')
+sys.path.append('/blond/utils')
+sys.path.append('/blond/impedances')
 
 from builtins import str
 import numpy as np
