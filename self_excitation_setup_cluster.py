@@ -11,10 +11,9 @@ from __future__ import division
 from __future__ import print_function
 from builtins import str
 import numpy as np
-import pylab as plt
+# import pylab as plt
 import pickle
 import os
-from run_cb_sim import run_cb_sim
 import cavity_model
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
@@ -115,24 +114,45 @@ params.N_plt_modes = 4
 
 params.cbfb_mag_window = 3001
 
-this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
-results_dir = 'output_files/self_exc_test/'
+working_dir = os.getcwd()
+scans_dir = '/scans/self_exc_test/'
+source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
-params.output_dir = this_directory + results_dir + '/'
+N_runs = 1
+
+for run in range(N_runs):
+    run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
     
+    #Create root directory for this run:
+    try:
+        os.makedirs(run_dir)
+    except:
+        pass   
     
-[dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
-     pos_mode_amp, width_mode_amp, cbfb_usb_mag, cbfb_lsb_mag] = run_cb_sim(params)
-        
-cb_data = {'params' : params,
-        'dipole_usb_mag' : dipole_usb_mag,
-        'dipole_lsb_mag' : dipole_lsb_mag,
-        'quad_usb_mag' : quad_usb_mag,
-        'quad_lsb_mag' : quad_lsb_mag,
-        'pos_mode_amp' : pos_mode_amp,
-        'width_mode_amp' : width_mode_amp,
-        'cbfb_usb_mag' : cbfb_usb_mag,
-        'cbfb_lsb_mag' : cbfb_lsb_mag}
-     
-with open(this_directory + results_dir + 'results.pickle', 'wb') as f:
-        pickle.dump(cb_data, f)
+    #Create directories for Condor outputs:
+    try:
+        os.makedirs(run_dir + 'log/')
+    except:
+        pass
+    
+    try:
+        os.makedirs(run_dir + 'output/')
+    except:
+        pass
+    
+    try:
+        os.makedirs(run_dir + 'error/')
+    except:
+        pass
+    
+    #Copy bash script:
+    os.system('cp run.sh ' + run_dir)
+    #Copy submit file:
+    os.system('cp run.sub ' + run_dir)
+    
+    #Create pickle file with parameters:
+    with open(run_dir + '/input_params.pickle', 'wb') as f:
+        pickle.dump(params, f)
+
+    #Submit job:
+    os.system('condor_submit run.sub')

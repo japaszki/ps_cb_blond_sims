@@ -55,8 +55,6 @@ def sine_fit(xdata, ydata, dt):
         
     amp_fit = amp[error.argmin()]
     
-    # amp_fit = amp_guess
-    
     return [amp_fit, freq_fit, ph_fit]
 
 
@@ -73,9 +71,6 @@ def bunch_statistics(dt, dE, method='mean_std'):
         if method == 'mean_std':
             result = {'dt_mean' : dt_mean, 'dt_std' : dt_std, \
                       'dE_mean' : dE_mean, 'dE_std' : dE_std}    
-        # elif method == 'gaussian':
-            # Need to perform binning first.
-            # opt.curve_fit(gaussian, )
             
         return result
 
@@ -112,7 +107,6 @@ class coupled_bunch_diag:
         #Get current turn from tracker:
         turn = self.tracker.RingAndRFSection_list[0].counter[0]
         bucket_length = self.ring.t_rev[turn] / self.harmonic_number
-        # bucket_centre = [(i+0.5) * bucket_length for i in range(self.harmonic_number)]
 
         #Record data if sampling on this turn:
         if (turn % self.dt) == 0:
@@ -149,7 +143,7 @@ class coupled_bunch_diag:
             ax.legend()
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_dE_turn_' + str(turn) + '.png')
-            plt.clf()
+            plt.close()
             
             #Plot bunch energy spread vs kick gradient:                
             plt.figure('bunch_sE', figsize=(8,6))
@@ -165,7 +159,7 @@ class coupled_bunch_diag:
             ax.legend()
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_sigmaE_turn_' + str(turn) + '.png')
-            plt.clf()
+            plt.close()
     
     def plot_size_width(self, start_turn, end_turn): 
         turn_indices = (self.turn_vec >= start_turn) & (self.turn_vec < end_turn)
@@ -181,7 +175,7 @@ class coupled_bunch_diag:
             plt.title('Bunch ' + str(i))
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_' + str(i) + '_offset.png')
-            plt.clf()
+            plt.close()
         
         #Plot bunch width vs time:
         for i in range(self.harmonic_number):
@@ -193,7 +187,7 @@ class coupled_bunch_diag:
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.title('Bunch ' + str(i))        
             plt.savefig(self.dirname + '/bunch_' + str(i) + '_width.png')
-            plt.clf()
+            plt.close()
         
     def mode_analysis(self, start_turn, end_turn, plots, method='fft'):
         #fit to sinousoid of constant amplitude and frequency.
@@ -230,7 +224,7 @@ class coupled_bunch_diag:
                     plt.title('Bunch ' + str(i))
                     ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                     plt.savefig(self.dirname + '/bunch_' + str(i) + '_offset_fit.png')
-                    plt.clf()
+                    plt.close()
                     
                     plt.figure('bunch_width_fit', figsize=(8,6))
                     ax = plt.axes([0.15, 0.1, 0.8, 0.8])
@@ -244,7 +238,7 @@ class coupled_bunch_diag:
                     plt.title('Bunch ' + str(i))
                     ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                     plt.savefig(self.dirname + '/bunch_' + str(i) + '_width_fit.png')
-                    plt.clf()
+                    plt.close()
               
             #Take FFT of fitted amplitude and phase values:
             pos_complex = np.multiply(pos_amp_fit, np.exp(1j * pos_ph_fit))
@@ -262,7 +256,7 @@ class coupled_bunch_diag:
                 plt.title('Bunch position oscillation')
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                 plt.savefig(self.dirname + '/bunch_pos_phases.png')
-                plt.clf()
+                plt.close()
                 
                 plt.figure('bunch_width_phases', figsize=(8,6))
                 ax = plt.axes([0.15, 0.1, 0.8, 0.8])
@@ -272,7 +266,7 @@ class coupled_bunch_diag:
                 plt.title('Bunch width oscillation')
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
                 plt.savefig(self.dirname + '/bunch_width_phases.png')
-                plt.clf()
+                plt.close()
             
         elif method == 'fft':
             #Calculate time span of FFT window and thus frequency resolution:
@@ -316,7 +310,7 @@ class coupled_bunch_diag:
                 plt.colorbar()
                 plt.rc('font', size=16)
                 plt.savefig(self.dirname + '/bunch_pos_img.png')
-                plt.show()
+                plt.close()
                 
                 plt.figure('bunch_width_img')
                 plot_y, plot_x = np.meshgrid(self.turn_vec[turn_indices], np.arange(self.harmonic_number+1))
@@ -328,7 +322,7 @@ class coupled_bunch_diag:
                 plt.colorbar()
                 plt.rc('font', size=16)
                 plt.savefig(self.dirname + '/bunch_width_img.png')
-                plt.show()
+                plt.close()
                 
                 plt.figure('bunch_pos_2dfft')  
                 plot_y, plot_x = np.meshgrid(np.arange(fft_pos.shape[1]) * df, np.arange(self.harmonic_number+1))
@@ -339,7 +333,7 @@ class coupled_bunch_diag:
                 plt.colorbar()
                 plt.rc('font', size=16)
                 plt.savefig(self.dirname + '/bunch_pos_2dfft.png')
-                plt.show()
+                plt.close()
                 
                 plt.figure('bunch_width_2dfft')  
                 plot_y, plot_x = np.meshgrid(np.arange(fft_width.shape[1]) * df, np.arange(self.harmonic_number+1))
@@ -350,7 +344,7 @@ class coupled_bunch_diag:
                 plt.colorbar()
                 plt.rc('font', size=16)
                 plt.savefig(self.dirname + '/bunch_width_2dfft.png')
-                plt.show()
+                plt.close()
                 
                             
         if plots:            
@@ -362,7 +356,7 @@ class coupled_bunch_diag:
             plt.title('Bunch position oscillation')
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_pos_modes.png')
-            plt.clf()
+            plt.close()
             
             plt.figure('bunch_width_fft')
             plt.bar([x for x in range(self.harmonic_number)], np.absolute(width_mode_spectrum))
@@ -371,7 +365,7 @@ class coupled_bunch_diag:
             plt.title('Bunch width oscillation')
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_width_modes.png')
-            plt.clf()
+            plt.close()
             
             
         return [pos_mode_spectrum, width_mode_spectrum]
@@ -410,7 +404,7 @@ class coupled_bunch_diag:
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.legend(loc=0, fontsize='medium')
             plt.savefig(self.dirname + '/pos_modes_vs_turn.png')
-            plt.clf()
+            plt.close()
             
             plt.figure('width_modes_vs_turn', figsize=(8,6))
             ax = plt.axes([0.15, 0.1, 0.8, 0.8])
@@ -424,6 +418,6 @@ class coupled_bunch_diag:
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.legend(loc=0, fontsize='medium')
             plt.savefig(self.dirname + '/width_modes_vs_turn.png')
-            plt.clf()
+            plt.close()
                 
         return [pos_modes, width_modes]
