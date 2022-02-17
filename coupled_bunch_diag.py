@@ -62,8 +62,8 @@ def sine_fit(xdata, ydata, dt):
 
 def bunch_statistics(dt, dE, method='mean_std'):
     if dt.size == 0 or dE.size == 0:
-        return {'dt_mean' : np.NaN, 'dt_std' : np.NaN, \
-                  'dE_mean' : np.NaN, 'dE_std' : np.NaN}
+        return {'dt_mean' : 0, 'dt_std' : 0, \
+                  'dE_mean' : 0, 'dE_std' : 0}
     else:
         dt_mean = bm.mean(dt)
         dt_std = bm.std(dt)
@@ -307,7 +307,7 @@ class coupled_bunch_diag:
             
             if plots:
                 plt.figure('bunch_pos_img')
-                plot_y, plot_x = np.meshgrid(self.turn_vec[turn_indices], np.arange(self.harmonic_number))
+                plot_y, plot_x = np.meshgrid(self.turn_vec[turn_indices], np.arange(self.harmonic_number+1))
                 plt.pcolormesh(plot_x, plot_y, bunch_rel_pos, cmap='hot', shading='flat')
                 plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
                 plt.title('Bunch position offset')
@@ -319,7 +319,7 @@ class coupled_bunch_diag:
                 plt.show()
                 
                 plt.figure('bunch_width_img')
-                plot_y, plot_x = np.meshgrid(self.turn_vec[turn_indices], np.arange(self.harmonic_number))
+                plot_y, plot_x = np.meshgrid(self.turn_vec[turn_indices], np.arange(self.harmonic_number+1))
                 plt.pcolormesh(plot_x, plot_y, bunch_rel_width, cmap='hot', shading='flat')
                 plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
                 plt.title('Bunch width offset')
@@ -331,7 +331,7 @@ class coupled_bunch_diag:
                 plt.show()
                 
                 plt.figure('bunch_pos_2dfft')  
-                plot_y, plot_x = np.meshgrid(np.arange(fft_pos.shape[1]) * df, np.arange(self.harmonic_number))
+                plot_y, plot_x = np.meshgrid(np.arange(fft_pos.shape[1]) * df, np.arange(self.harmonic_number+1))
                 plt.pcolormesh(plot_x, plot_y, np.abs(fft_pos), cmap='hot', shading='flat')
                 plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
                 plt.xlabel('Mode')
@@ -342,7 +342,7 @@ class coupled_bunch_diag:
                 plt.show()
                 
                 plt.figure('bunch_width_2dfft')  
-                plot_y, plot_x = np.meshgrid(np.arange(fft_width.shape[1]) * df, np.arange(self.harmonic_number))
+                plot_y, plot_x = np.meshgrid(np.arange(fft_width.shape[1]) * df, np.arange(self.harmonic_number+1))
                 plt.pcolormesh(plot_x, plot_y, np.abs(fft_width), cmap='hot', shading='flat')
                 plt.axis([plot_x.min(), plot_x.max(), plot_y.min(), plot_y.max()])
                 plt.xlabel('Mode')

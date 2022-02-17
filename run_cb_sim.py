@@ -7,7 +7,7 @@ Created on Mon Jan 31 11:07:01 2022
 import os
 import numpy as np
 import pylab as plt
-# from scipy.constants import m_p ,c, e
+import scipy.signal
 
 from blond.input_parameters.ring import Ring
 from blond.input_parameters.rf_parameters import RFStation
@@ -34,7 +34,7 @@ def run_cb_sim(params):
     
     #Initialise variables to store data:     
     long_beam_signal = []
-    cbfb_baseband_vec = []
+    cbfb_baseband_vec = [ [] for x in range(params.cbfb_params['N_channels']) ]
     fft_n_harmonics = int(np.floor(params.fft_n_slices/2))
     dipole_usb_mag = [None] * fft_n_harmonics
     dipole_lsb_mag = [None] * fft_n_harmonics
@@ -66,12 +66,21 @@ def run_cb_sim(params):
                         cut_right=turn_length, n_slices=params.fft_n_slices))
     
     # WAKE IMPEDANCE -------------------------------------------------------
-    frequency_R = 2*rf.omega_rf[0,0] / 2.0 / np.pi
-    resonator = Resonators(params.wake_R_S, frequency_R, params.wake_Q)    
-    imp_list = [resonator]
-    ind_volt_freq = InducedVoltageFreq(beam, tomo_profile, imp_list,
-                                        frequency_resolution=5e4)
-    total_ind_volt = TotalInducedVoltage(beam, tomo_profile, [ind_volt_freq])
+    n_turns_memory = 100
+    filter_front_wake = 0.5
+    
+    frequency_step = 1/(ring.t_rev[0]*n_turns_memory) # [Hz]
+    front_wake_length = filter_front_wake * ring.t_rev[0]*n_turns_memory
+    
+    intensity_freq = InducedVoltageFreq(beam,
+                                       tomo_profile,
+                                       params.resonator_list,
+                                       frequency_step,
+                                       RFParams=rf,
+                                       multi_turn_wake=True,
+                                       front_wake_length=front_wake_length)
+    
+    longitudinal_intensity = TotalInducedVoltage(beam, tomo_profile, [intensity_freq])
     
     # BEAM GENERATION -------------------------------------------------------------
     distribution_options_list = {'bunch_length': params.bunch_length,
@@ -83,7 +92,7 @@ def run_cb_sim(params):
                                  params.n_bunches, params.bunch_spacing_buckets,
                                  intensity_list=params.intensity_list,
                                  minimum_n_macroparticles=params.minimum_n_macroparticles,
-                                 TotalInducedVoltage=total_ind_volt,
+                                 TotalInducedVoltage=longitudinal_intensity,
                                  n_iterations_input=4, seed=7878)
     
     bunchmonitor = BunchMonitor(ring, rf, beam,
@@ -115,14 +124,14 @@ def run_cb_sim(params):
     
     plt.figure('finemet_transfer_function')
     plt.semilogx(np.fft.rfftfreq(params.rf_params['impulse_response'].shape[0], params.rf_params['dt']),\
-             np.absolute(np.fft.rfft(params.rf_params['impulse_response'])))
+             20*np.log10(np.absolute(np.fft.rfft(params.rf_params['impulse_response']))))
     plt.xlabel('Frequency [Hz]')
-    plt.ylabel('Finemet frequency response')
+    plt.ylabel('Finemet frequency response [dB]')
     plt.savefig(params.output_dir + 'finemet_frequency_response.png')
     
     # Accelerator map
     map_ = [full_tracker] + [tomo_profile] + [long_fft_profile] + \
-        [total_ind_volt] + [bunchmonitor] + [fb] + [fb_diag] + [plots]
+        [longitudinal_intensity] + [bunchmonitor] + [fb] + [fb_diag] + [plots]
     print("Map set")
     print("")
     
@@ -136,12 +145,19 @@ def run_cb_sim(params):
             m.track()
             
         #Apply excitation:
+        turn_length = ring.t_rev[turn]
+        f_rev = 1 / turn_length
+        exc_freq = params.exc_harmonic * f_rev + params.exc_delta_freq
+        mod_freq = params.exc_mod_harm * f_rev
+            
         particle_t = turn_start_time + beam.dt
-        beam.dE += params.exc_v[turn] * bm.sin(2*np.pi*exc_freq*particle_t)
+        beam.dE += params.exc_v[turn] * bm.sin(2*np.pi*exc_freq*particle_t) * \
+            bm.sin(2*np.pi*mod_freq*particle_t + params.exc_mod_phase)
         turn_start_time += turn_length
         
-        #Record CBFB ch1 baseband:
-        cbfb_baseband_vec.append(fb.dipole_channels[0].cic_decim_out)
+        #Record CBFB baseband signals:
+        for channel in range(params.cbfb_params['N_channels']):
+            cbfb_baseband_vec[channel].append(fb.dipole_channels[channel].cic_decim_out)
         
         if turn == params.start_cbfb_turn:
             for channel in range(params.cbfb_params['N_channels']):
@@ -230,27 +246,63 @@ def run_cb_sim(params):
     for h in range(fft_n_harmonics):
         rel_freq = long_fft_freq - f_rev * h
         
-        dipole_usb_mag[h] = np.mean(np.absolute(long_fft[(rel_freq >= 0.5*abs(params.fs_exc)) & \
+        dipole_usb_mag[h] = np.mean(np.abs(long_fft[(rel_freq >= 0.5*abs(params.fs_exc)) & \
                                              (rel_freq < 1.5*abs(params.fs_exc))]))
-        quad_usb_mag[h] = np.mean(np.absolute(long_fft[(rel_freq >= 0.5*2*abs(params.fs_exc)) & \
+        quad_usb_mag[h] = np.mean(np.abs(long_fft[(rel_freq >= 0.5*2*abs(params.fs_exc)) & \
                                            (rel_freq < 1.5*2*abs(params.fs_exc))]))
-        dipole_lsb_mag[h] = np.mean(np.absolute(long_fft[(rel_freq >= -1.5*abs(params.fs_exc)) & \
+        dipole_lsb_mag[h] = np.mean(np.abs(long_fft[(rel_freq >= -1.5*abs(params.fs_exc)) & \
                                              (rel_freq < -0.5*abs(params.fs_exc))]))
-        quad_lsb_mag[h] = np.mean(np.absolute(long_fft[(rel_freq >= -1.5*2*abs(params.fs_exc)) & \
+        quad_lsb_mag[h] = np.mean(np.abs(long_fft[(rel_freq >= -1.5*2*abs(params.fs_exc)) & \
                                            (rel_freq < -0.5*2*abs(params.fs_exc))]))
     
-    plt.figure('cbfb_baseband')
-    ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
-    ax.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
-            np.real(cbfb_baseband_vec[params.fb_diag_start_delay:]), '-')
-    ax.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
-            np.imag(cbfb_baseband_vec[params.fb_diag_start_delay:]), '-')
-    ax.set_xlabel("Turn")
-    ax.set_ylabel('CBFB baseband signal [arb. units]')
-    ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-    plt.savefig(params.output_dir + 'cbfb_baseband.png')
+    plt.figure('cbfb_baseband_raw')
+    plt.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
+            np.real(cbfb_baseband_vec[0][params.fb_diag_start_delay:]), label='I')
+    plt.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
+            np.imag(cbfb_baseband_vec[0][params.fb_diag_start_delay:]), label='Q')
+    plt.xlabel("Turn")
+    plt.ylabel('CBFB baseband signal [arb. units]')
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    plt.savefig(params.output_dir + 'cbfb_baseband_raw.png')
     plt.clf()
     
+    #Calculate CBFB baseband magnitude:
+    cbfb_mag_window = 3001
+    
+    cbfb_bb_usb = [[] for i in range(params.cbfb_params['N_channels'])]
+    cbfb_bb_lsb = [[] for i in range(params.cbfb_params['N_channels'])]
+    cbfb_bb_usb_mag = [[] for i in range(params.cbfb_params['N_channels'])]
+    cbfb_bb_lsb_mag = [[] for i in range(params.cbfb_params['N_channels'])]
+    cbfb_bb_usb_mag_mean = [[] for i in range(params.cbfb_params['N_channels'])]
+    cbfb_bb_lsb_mag_mean = [[] for i in range(params.cbfb_params['N_channels'])]
+    
+    for channel in range(params.cbfb_params['N_channels']):
+        hilb = np.imag(scipy.signal.hilbert(np.imag(cbfb_baseband_vec[channel])))
+        cbfb_bb_usb[channel] = np.real(cbfb_baseband_vec[channel]) + hilb
+        cbfb_bb_lsb[channel] = np.real(cbfb_baseband_vec[channel]) - hilb
+    
+        cbfb_bb_usb_mag[channel] = scipy.signal.savgol_filter(np.abs(cbfb_bb_usb[channel]), cbfb_mag_window, 5)
+        cbfb_bb_lsb_mag[channel] = scipy.signal.savgol_filter(np.abs(cbfb_bb_lsb[channel]), cbfb_mag_window, 5)
+        
+        cbfb_bb_usb_mag_mean[channel] = np.mean(cbfb_bb_usb_mag[channel][params.fft_start_turn:params.fft_end_turn])
+        cbfb_bb_lsb_mag_mean[channel] = np.mean(cbfb_bb_lsb_mag[channel][params.fft_start_turn:params.fft_end_turn])
+    
+    # cbfb_bb_usb_mag = np.convolve(np.abs(cbfb_bb_usb), np.ones(cbfb_mag_window)/cbfb_mag_window, mode='same')
+    # cbfb_bb_lsb_mag = np.convolve(np.abs(cbfb_bb_lsb), np.ones(cbfb_mag_window)/cbfb_mag_window, mode='same')
+        
+    plt.figure('cbfb_baseband_magnitudes')
+    for channel in range(params.cbfb_params['N_channels']):
+        plt.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
+                cbfb_bb_usb_mag[channel][params.fb_diag_start_delay:], label='Ch. '+str(channel)+' USB')
+        plt.plot([x for x in range(params.fb_diag_start_delay, params.N_t)], \
+                cbfb_bb_lsb_mag[channel][params.fb_diag_start_delay:], label='Ch. '+str(channel)+' LSB')
+    plt.legend(loc=0, fontsize='medium')
+    plt.xlabel("Turn")
+    plt.ylabel('CBFB baseband signal [arb. units]')
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    plt.savefig(params.output_dir + 'cbfb_baseband_magnitudes.png')
+    plt.clf()
+         
     #Plot bunch width and position history
     fb_diag.plot_size_width(params.fb_diag_start_delay, params.N_t)
     [pos_mode_spectrum, width_mode_spectrum] = fb_diag.mode_analysis(params.fft_start_turn, params.fft_end_turn, True)
@@ -259,8 +311,8 @@ def run_cb_sim(params):
                           params.mode_analysis_window, params.mode_analysis_resolution, params.N_plt_modes)
     
     #Get magnitudes of desired modes:                             
-    pos_mode_amp = [np.absolute(pos_mode_spectrum[m]) for m in range(params.harmonic_number)]
-    width_mode_amp = [np.absolute(width_mode_spectrum[m]) for m in range(params.harmonic_number)]
+    pos_mode_amp = [np.abs(pos_mode_spectrum[m]) for m in range(params.harmonic_number)]
+    width_mode_amp = [np.abs(width_mode_spectrum[m]) for m in range(params.harmonic_number)]
     
     # Plot synchrotron frequency distribution
     [sync_freq_distribution_left, sync_freq_distribution_right], \
@@ -283,4 +335,5 @@ def run_cb_sim(params):
     
     print('Zero-amplitude synchrotron frequency : ' + str(sync_freq_distribution_left[0]) + ' Hz')
     
-    return [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag, pos_mode_amp, width_mode_amp]
+    return [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
+            pos_mode_amp, width_mode_amp, cbfb_bb_usb_mag_mean, cbfb_bb_lsb_mag_mean]

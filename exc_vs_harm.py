@@ -16,7 +16,8 @@ import pickle
 import os
 from run_cb_sim import run_cb_sim
 import cavity_model
-from scipy.constants import m_p ,c, e
+from scipy.constants import c
+from blond.impedances.impedance_sources import Resonators
 
 
 class sim_params:
@@ -46,8 +47,8 @@ params.voltage_program = 168e3
 params.phi_offset = 0
 
 #Wake impedance
-params.wake_R_S = 1
-params.wake_Q = 100
+# params.resonator_list = [Resonators([4e3,3.5e3,3.15e3], [9.6e6,10e6,10.6e6], [14,9.5,9])]
+params.resonator_list = [Resonators([1,1,1], [9.6e6,10e6,10.6e6], [14,9.5,9])]
 
 #Beam parameters:
 params.n_bunches = 21
@@ -87,7 +88,9 @@ params.fb_diag_start_delay = 100
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
 params.exc_v[:] = 1.5e3
-params.fs_exc = 387.29
+params.fs_exc = 442.07
+params.exc_mod_harm = 21
+params.exc_mod_phase = 0 #np.pi/2 for no modulation
 
 #Simulation parameters
 params.profile_plot_bunch = 0
@@ -99,7 +102,7 @@ params.fft_n_slices = 64
 params.fft_start_turn = 4000
 params.fft_end_turn = 10000
 params.fft_plot_harmonics = [20]
-params.fft_span_around_harmonic = 2000
+params.fft_span_around_harmonic = 6*params.fs_exc
 
 params.mode_analysis_window = 4000
 params.mode_analysis_resolution = 2000
@@ -121,7 +124,7 @@ for run in range(N_runs):
     params.exc_harmonic = exc_harm_runs[run]
     
     [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
-     pos_mode_amp, width_mode_amp] = run_cb_sim(params)
+     pos_mode_amp, width_mode_amp, _, _] = run_cb_sim(params)
         
     cb_data = {'params' : params,
         'dipole_usb_mag' : dipole_usb_mag,
@@ -144,7 +147,7 @@ for run in range(N_runs):
     params.exc_harmonic = exc_harm_runs[run]
     
     [dipole_usb_mag, dipole_lsb_mag, quad_usb_mag, quad_lsb_mag,\
-     pos_mode_amp, width_mode_amp] = run_cb_sim(params)
+     pos_mode_amp, width_mode_amp, _, _] = run_cb_sim(params)
         
     cb_data = {'params' : params,
         'dipole_usb_mag' : dipole_usb_mag,

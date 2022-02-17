@@ -69,26 +69,8 @@ class feedback:
                 
         #Update Finemet model:
         self.finemet.update(self.output_sum, self.turn_start_time + self.sample_dt)
-        
-        #Perform cubic interpolation of h64 output to simulate finite bandwidth of high power system:
-        # self.output_spline = scipy.interpolate.CubicSpline(self.sample_dt, self.cbfb_output_sum)
-        # self.output_spline_all_chans = scipy.interpolate.CubicSpline(self.sample_dt, self.cbfb_output_sum_all_chans)
-        
-        #Ignore particles not within this turn:
-        # particle_mask = (self.beam.dt >= 0) & (self.beam.dt < turn_length)
-        
-        #Apply kick to particles:
-        # self.beam.dE[particle_mask] += self.output_spline(self.beam.dt[particle_mask])
-        
-
-        #Get part of finemet output history corresponding to current turn:
-        # finemet_out_dt = self.finemet.output_hist_t * self.finemet.dt - self.turn_start_time - self.rf_output_delay
-        # finemet_out_turn_mask = ~((finemet_out_dt < 0) | (finemet_out_dt > turn_length))
-
-        # self.finemet_out_turn_dt = finemet_out_dt[finemet_out_turn_mask]
-        # self.finemet_out_turn_v = self.finemet.output_hist_v[finemet_out_turn_mask]
-        
-        [self.finemet_dt, self.finemet_v] = self.finemet.get_output_in_window([self.turn_start_time, self.turn_start_time + turn_length])
+        [self.finemet_dt, self.finemet_v] = self.finemet.get_output_in_window([self.turn_start_time, \
+                                                                               self.turn_start_time + turn_length])
         
         #Apply kick to particles:
         bm.linear_interp_kick(dt=self.beam.dt, dE=self.beam.dE,
@@ -130,6 +112,8 @@ class dipole_channel:
         self.nco_phase = 2*np.pi*np.arange(self.h_samp)/self.h_samp
         
         #Downmix input signal at selected harmonic:
+        # self.downmix_lo_i = bm.mul(np.cos(self.h_in * self.nco_phase), np.sin(21 * self.nco_phase))
+        # self.downmix_lo_q = bm.mul(np.sin(self.h_in * self.nco_phase), np.sin(21 * self.nco_phase))
         self.downmix_lo_i = np.cos(self.h_in * self.nco_phase)
         self.downmix_lo_q = np.sin(self.h_in * self.nco_phase)
         self.downmix_out_i = bm.mul(beam_signal, self.downmix_lo_i)
