@@ -11,14 +11,14 @@ from __future__ import print_function
 
 import sys
 sys.path.append('/blond')
-sys.path.append('/blond/blond/utils')
-sys.path.append('/blond/blond/impedances')
+# sys.path.append('/blond/blond/utils')
+# sys.path.append('/blond/blond/impedances')
 
 from builtins import str
 import numpy as np
 import pickle
 import os
-import cavity_model
+from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
 
@@ -75,7 +75,7 @@ params.cbfb_params['gain'][0][:] = 1e-3 * np.exp(2j * np.pi * 0.0)
 finemet_dt = 5e-9
 finemet_f0 = 1.96e6
 finemet_Q = 0.49
-finemet_h = cavity_model.resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt, 100)
+finemet_h = resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt, 100)
 
 params.rf_params = {'dt' : finemet_dt, 
                     'impulse_response' : finemet_h, 
