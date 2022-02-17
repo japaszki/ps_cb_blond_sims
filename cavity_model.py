@@ -8,7 +8,6 @@ Created on Thu Feb 10 14:09:29 2022
 import numpy as np
 from blond.utils import bmath as bm
 
-
 def resonator_impulse_response(omega_0, Q, dt, length):
     p1 = - omega_0 / (2*Q) * (1 + np.lib.scimath.sqrt(1-4*Q**2))
     p2 = - omega_0 / (2*Q) * (1 - np.lib.scimath.sqrt(1-4*Q**2))
