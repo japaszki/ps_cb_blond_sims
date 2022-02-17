@@ -6,12 +6,14 @@
 # granted to it by virtue of its status as an Intergovernmental Organization or
 # submit itself to any jurisdiction.
 # Project website: http://blond.web.cern.ch/
-
 from __future__ import division
 from __future__ import print_function
+
+import sys
+sys.path.append('/blond')
+
 from builtins import str
 import numpy as np
-# import pylab as plt
 import pickle
 import os
 import cavity_model
