@@ -10,9 +10,11 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
-sys.path.append('/blond')
-sys.path.append('/blond/utils')
-sys.path.append('/blond/impedances')
+sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/')
+sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/')
+sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/impedances/')
+sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/utils/')
+
 
 from builtins import str
 import numpy as np
