@@ -9,17 +9,9 @@
 from __future__ import division
 from __future__ import print_function
 
-import sys
-
-
-# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/')
-sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/')
-# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/impedances/')
-# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/utils/')
+# import sys
 
 import os
-os.system('source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_96python3 x86_64-centos7-gcc8-opt')
-
 from builtins import str
 import numpy as np
 import pickle
