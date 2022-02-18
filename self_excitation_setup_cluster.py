@@ -10,16 +10,20 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
-sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/')
-sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/')
-sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/impedances/')
-sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/utils/')
 
+
+# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/')
+sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/')
+# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/impedances/')
+# sys.path.append('/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/utils/')
+
+import os
+os.system('source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_96python3 x86_64-centos7-gcc8-opt')
 
 from builtins import str
 import numpy as np
 import pickle
-import os
+
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
@@ -152,9 +156,9 @@ for run in range(N_runs):
         pass
     
     #Copy bash script:
-    os.system('cp run.sh ' + run_dir)
+    os.system('cp ' + source_dir + 'run.sh ' + run_dir)
     #Copy submit file:
-    os.system('cp run.sub ' + run_dir)
+    os.system('cp ' + source_dir + 'run.sub ' + run_dir)
     
     #Create pickle file with parameters:
     with open(run_dir + '/input_params.pickle', 'wb') as f:
