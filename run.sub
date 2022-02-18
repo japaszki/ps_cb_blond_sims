@@ -1,10 +1,9 @@
-    executable              = run.sh
-    arguments               = $(ClusterId)$(ProcId)
-    output                  = output/$(ClusterId).$(ProcId).out
-    error                   = error/$(ClusterId).$(ProcId).err
-    log                     = log/$(ClusterId).log
-	transfer_input_files 	= input_params.pickle
-	request_cpus 			= 2
-	+JobFlavour             = "workday"
-	
-    queue
+executable              = run.sh
+arguments               = $(ClusterId)$(ProcId)
+output                  = output/$(ClusterId).$(ProcId).out
+error                   = error/$(ClusterId).$(ProcId).err
+log                     = log/$(ClusterId).log
+transfer_input_files 	= input_params.pickle
+request_cpus 			= 2
++JobFlavour             = "workday"
+queue
