@@ -5,4 +5,6 @@ source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_96python3 x86_64-centos7-g
 export PYTHONPATH="/afs/cern.ch/user/j/japaszki/blond_sims/blond/blond/:$PYTHONPATH"
 export PYTHONPATH="/afs/cern.ch/user/j/japaszki/blond_sims/ps_cb_blond_sims/:$PYTHONPATH"
 
+echo $PYTHONPATH
+
 python /afs/cern.ch/user/j/japaszki/blond_sims/ps_cb_blond_sims/self_excitation_setup_cluster.py
