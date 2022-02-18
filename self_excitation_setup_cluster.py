@@ -63,7 +63,9 @@ params.cbfb_params = {'N_channels' : 1,
                       'h_out' : [1],
                       'active' : [False],
                       'sideband_swap' : [True],
-                      'gain' : [np.zeros(params.N_t+1, complex)]}
+                      'gain' : [np.zeros(params.N_t+1, complex)],
+                      'pre_filter' : 'none',
+                      'post_filter' : 'none'}
 
 params.cbfb_params['gain'][0][:] = 1e-3 * np.exp(2j * np.pi * 0.0)
 
