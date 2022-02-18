@@ -3,4 +3,5 @@
     output                  = output/$(ClusterId).$(ProcId).out
     error                   = error/$(ClusterId).$(ProcId).err
     log                     = log/$(ClusterId).log
+	transfer_input_files 	= input_params.pickle
     queue
