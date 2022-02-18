@@ -18,7 +18,6 @@ from blond.input_parameters.rf_parameters import RFStation
 from blond.trackers.tracker import RingAndRFTracker, FullRingAndRF
 from blond.beam.beam import Beam, Proton
 from blond.beam.profile import Profile, CutOptions
-# from blond.impedances.impedance_sources import Resonators
 from blond.impedances.impedance import InducedVoltageFreq, TotalInducedVoltage
 from blond.beam.distributions_multibunch \
                             import matched_from_distribution_density_multibunch
@@ -28,6 +27,10 @@ from blond.plots.plot import Plot
 import cbfb
 import coupled_bunch_diag as cbd
 from blond.utils import bmath as bm
+
+#Dummy class to store paramters:
+class sim_params:
+    pass
 
 working_dir = os.getcwd()
 output_dir = working_dir + '/sim_outputs/'
@@ -312,7 +315,7 @@ plt.close()
 fb_diag.plot_size_width(params.fb_diag_start_delay, params.N_t)
 [pos_mode_spectrum, width_mode_spectrum] = fb_diag.mode_analysis(params.fft_start_turn, params.fft_end_turn, True)
 
-fb_diag.modes_vs_time(params.fb_diag_start_delay, params.N_t,\
+[mode_times, pos_modes_vs_time, width_modes_vs_time] = fb_diag.modes_vs_time(params.fb_diag_start_delay, params.N_t,\
                       params.mode_analysis_window, params.mode_analysis_resolution, params.N_plt_modes)
 
 #Get magnitudes of desired modes:                             
@@ -349,7 +352,10 @@ cb_data = {'params' : params,
     'pos_mode_amp' : pos_mode_amp,
     'width_mode_amp' : width_mode_amp,
     'cbfb_usb_mag' : cbfb_bb_usb_mag,
-    'cbfb_lsb_mag' : cbfb_bb_lsb_mag}
+    'cbfb_lsb_mag' : cbfb_bb_lsb_mag,
+    'mode_times' : mode_times,
+    'pos_modes_vs_time' : pos_modes_vs_time,
+    'width_modes_vs_time' : width_modes_vs_time}
  
 with open(working_dir + 'results.pickle', 'wb') as f:
     pickle.dump(cb_data, f)

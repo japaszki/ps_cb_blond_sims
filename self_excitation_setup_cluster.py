@@ -56,7 +56,7 @@ params.n_bunches = 21
 params.bunch_spacing_buckets = 1
 params.bunch_length = 4*2/c
 params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
-params.minimum_n_macroparticles = [1e4] * params.n_bunches
+params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
 params.cbfb_params = {'N_channels' : 1,
                       'h_in' : [20],
@@ -99,7 +99,7 @@ params.exc_mod_phase = np.pi/2
 params.profile_plot_bunch = 0
 params.phase_plot_dt = 2000
 params.phase_plot_max_dE = 100e6
-params.tomo_n_slices = 3000
+params.tomo_n_slices = 10000
 params.tomo_dt = 10
 params.fft_n_slices = 64
 params.fft_start_turn = 180000

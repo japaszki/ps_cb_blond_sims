@@ -420,4 +420,4 @@ class coupled_bunch_diag:
             plt.savefig(self.dirname + '/width_modes_vs_turn.png')
             plt.close()
                 
-        return [pos_modes, width_modes]
+        return [window_centres, pos_modes, width_modes]

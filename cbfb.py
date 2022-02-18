@@ -20,6 +20,8 @@ class feedback:
         self.sideband_swap = cbfb_params['sideband_swap']
         self.active = cbfb_params['active']
         self.gain = cbfb_params['gain']
+        # self.pre_filter = cbfb_params['pre_filter']
+        # self.post_filter = cbfb_params['post_filter']
         
         self.tracker = tracker
         self.ring = ring
@@ -34,7 +36,8 @@ class feedback:
         #Initialise each channel:
         self.dipole_channels = []
         for i in range(self.N_channels):
-            self.dipole_channels.append(dipole_channel(self.h_in[i], self.h_out[i], self.gain[i], self.sideband_swap[i]))
+            self.dipole_channels.append(dipole_channel(self.h_samp, self.h_in[i],\
+                                    self.h_out[i], self.gain[i], self.sideband_swap[i]))
         
         #Initialise Finement cavity model:
         self.finemet = cavity_model.cavity_model_fir(rf_params)
@@ -84,19 +87,20 @@ class feedback:
         
 
 class dipole_channel:
-    def __init__(self, h_in, h_out, gain, sideband_swap):        
+    def __init__(self, h_samp, h_in, h_out, gain, sideband_swap):        
         self.h_in = h_in
         self.h_out = h_out
         self.sideband_swap = sideband_swap
         self.gain = gain
         
         #IIR notch filter properties:
-        self.hpf_i = iir.iir_hpf(1024, 1)
-        self.hpf_q = iir.iir_hpf(1024, 1)
+        #scale transfer function according to sample rate
+        self.hpf_i = iir.iir_hpf(16*h_samp, 1)
+        self.hpf_q = iir.iir_hpf(16*h_samp, 1)
         
         #Baseband filter properties:
         self.cic_n = 2
-        self.cic_r = 64
+        self.cic_r = h_samp
         self.cic_m = 4
         
         self.decim_i = cic.mov_avg_decim(self.cic_n, self.cic_r, self.cic_m)
@@ -105,7 +109,7 @@ class dipole_channel:
         self.interp_q = cic.mov_avg_interp(self.cic_n, self.cic_r, self.cic_m)
         self.cic_decim_out = 0
         
-        self.h_samp = 64
+        self.h_samp = h_samp
         
     def update_output(self, turn, beam_signal):
         #Generate NCO phase values for 1 turn:
