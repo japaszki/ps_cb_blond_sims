@@ -9,13 +9,10 @@
 from __future__ import division
 from __future__ import print_function
 
-# import sys
-
 import os
 from builtins import str
 import numpy as np
 import pickle
-
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
@@ -28,7 +25,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 80000     # Number of turns to track
+params.N_t = 300000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -81,12 +78,12 @@ params.rf_params = {'dt' : finemet_dt,
                     'output_delay' : 1e-8,
                     'history_length' : 1e-6}
 
-params.start_cbfb_turn = 65000
-params.end_cbfb_turn = 80000
+params.start_cbfb_turn = 200000
+params.end_cbfb_turn = 250000
 params.cbfb_active_mask = [True] #Only these channels get activated on SCBFB
 
 params.fb_diag_dt = 25
-params.fb_diag_plot_dt = 200
+params.fb_diag_plot_dt = 2000
 params.fb_diag_start_delay = 100
 
 # Excitation parameters:
@@ -100,13 +97,13 @@ params.exc_mod_phase = np.pi/2
 
 #Simulation parameters
 params.profile_plot_bunch = 0
-params.phase_plot_dt = 200
+params.phase_plot_dt = 2000
 params.phase_plot_max_dE = 100e6
 params.tomo_n_slices = 3000
 params.tomo_dt = 10
 params.fft_n_slices = 64
-params.fft_start_turn = 52000
-params.fft_end_turn = 58000
+params.fft_start_turn = 180000
+params.fft_end_turn = 200000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 6*params.fs_exc
 
@@ -158,4 +155,5 @@ for run in range(N_runs):
 
     #Submit job:
     os.system('cd ' + run_dir)
+    print('Submitting to Condor from: ' + os.getcwd())
     os.system('condor_submit run.sub')

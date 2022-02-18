@@ -31,13 +31,16 @@ from blond.utils import bmath as bm
 
 working_dir = os.getcwd()
 output_dir = working_dir + '/sim_outputs/'
+print("Working directory is " + working_dir)
 
 #Load input parameters:
+print("Loading input paramters from " + working_dir + '/input_params.pickle ...')
 with open(working_dir + '/input_params.pickle', 'rb') as f:
-        params = pickle.load(f)    
+        params = pickle.load(f)
         
 #Create directory to store results:
 try:
+    print("Creating directory " + output_dir)
     os.makedirs(output_dir)
 except:
     pass
