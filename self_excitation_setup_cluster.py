@@ -157,4 +157,5 @@ for run in range(N_runs):
         pickle.dump(params, f)
 
     #Submit job:
+    os.system('cd ' + run_dir)
     os.system('condor_submit run.sub')
