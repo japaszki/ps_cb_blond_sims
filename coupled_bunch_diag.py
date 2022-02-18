@@ -128,7 +128,7 @@ class coupled_bunch_diag:
             line = int(turn / self.dt)
             
             #Fit cubic spline to all channel sum:
-            output_spline_all_chans = scipy.interpolate.CubicSpline(self.cbfb.sample_dt, self.cbfb.output_sum_all_chans)
+            output_spline_all_chans = scipy.interpolate.CubicSpline(self.cbfb.dsp_sample_dt, self.cbfb.output_sum_all_chans)
                    
             #Plot bunch energy deviation vs kick:
             plt.figure('bunch_dE', figsize=(8,6))

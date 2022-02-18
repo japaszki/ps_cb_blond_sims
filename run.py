@@ -32,6 +32,7 @@ from blond.utils import bmath as bm
 class sim_params:
     pass
 
+
 working_dir = os.getcwd()
 output_dir = working_dir + '/sim_outputs/'
 print("Working directory is " + working_dir)

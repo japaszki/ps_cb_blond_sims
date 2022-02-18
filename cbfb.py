@@ -8,6 +8,7 @@ Created on Tue Jan 18 14:18:45 2022
 from blond.beam.profile import Profile, CutOptions
 from blond.utils import bmath as bm
 import numpy as np
+import scipy.interpolate
 import cic
 import iir
 import cavity_model
@@ -20,23 +21,36 @@ class feedback:
         self.sideband_swap = cbfb_params['sideband_swap']
         self.active = cbfb_params['active']
         self.gain = cbfb_params['gain']
-        # self.pre_filter = cbfb_params['pre_filter']
-        # self.post_filter = cbfb_params['post_filter']
+        self.pre_filter = cbfb_params['pre_filter']
+        self.post_filter = cbfb_params['post_filter']
         
         self.tracker = tracker
         self.ring = ring
         self.beam = beam
         
         #Sampling of beam signal:
-        self.h_samp = 64
+        if self.pre_filter == 'none':
+            self.h_samp_adc = 64
+        elif self.pre_filter == 'peak':
+            self.samples_per_bucket = 40
+            self.h_samp_adc = 21 * self.samples_per_bucket
+            self.bucket_max = np.zeros(21)
+            
         turn = self.tracker.RingAndRFSection_list[0].counter
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
-                    cut_right=ring.t_rev[turn], n_slices=self.h_samp))
+                    cut_right=ring.t_rev[turn], n_slices=self.h_samp_adc))
         
-        #Initialise each channel:
+        if self.post_filter == 'none':
+            self.h_samp_dsp = 64
+        elif self.post_filter == 'h21_mod_h64_clk':
+            self.h_samp_dsp = 64
+        elif self.post_filter == 'h21_mod_h256_clk':
+            self.h_samp_dsp = 256
+        
+        #Initialise each DSP channel:
         self.dipole_channels = []
         for i in range(self.N_channels):
-            self.dipole_channels.append(dipole_channel(self.h_samp, self.h_in[i],\
+            self.dipole_channels.append(dipole_channel(self.h_samp_dsp, self.h_in[i],\
                                     self.h_out[i], self.gain[i], self.sideband_swap[i]))
         
         #Initialise Finement cavity model:
@@ -55,13 +69,31 @@ class feedback:
         self.profile.set_slices_parameters()
         self.profile.track()
         self.beam_signal = self.beam.ratio * self.profile.n_macroparticles
-        self.sample_dt = np.linspace(0, turn_length * (self.h_samp - 1) / self.h_samp, self.h_samp)
+        self.adc_sample_dt = np.linspace(0, turn_length * (self.h_samp_adc - 1) / self.h_samp_adc, self.h_samp_adc)
+        self.dsp_sample_dt = np.linspace(0, turn_length * (self.h_samp_dsp - 1) / self.h_samp_dsp, self.h_samp_dsp)
         
+        #Perform pre-filtering of beam signal:
+        if self.pre_filter == 'none':
+            self.beam_signal_filt = self.beam_signal
+        elif self.pre_filter == 'peak':
+            #Perform peak detection per bucket:
+            for i in range(21):
+                bucket_indices = range(i*self.samples_per_bucket, (i+1)*self.samples_per_bucket)
+                self.bucket_max[i] = np.max(self.beam_signal[bucket_indices])
+            
+            #Resample to DSP sample rate:
+            bucket_dt = np.linspace(0, turn_length * 20 / 21, 21)
+            interp_spline = scipy.interpolate.CubicSpline(bucket_dt, self.bucket_max)
+            self.beam_signal_filt = interp_spline(self.dsp_sample_dt)
+    
         #Update each channel:
-        self.output_sum = np.zeros(self.h_samp)
-        self.output_sum_all_chans = np.zeros(self.h_samp)
+        #Note that the DSP channels expect an input of h_samp_dsp samples per turn
+        #If beam is sampled with a different sample rate, the pre-filter has to re-sample the signal appropriately.
+        
+        self.output_sum = np.zeros(self.h_samp_dsp)
+        self.output_sum_all_chans = np.zeros(self.h_samp_dsp)
         for i in range(self.N_channels):
-            channel_output = self.dipole_channels[i].update_output(turn, self.beam_signal)
+            channel_output = self.dipole_channels[i].update_output(turn, self.beam_signal_filt)
             
             #Sum outputs of all channels for diagnotics:
             self.output_sum_all_chans += channel_output
@@ -69,9 +101,16 @@ class feedback:
             #Sum outputs of all active channels:
             if self.active[i]:
                 self.output_sum += channel_output
-                
+           
+        #Perform post_filtering of output signal:
+        if self.post_filter == 'none':
+            self.output_sum_filt = self.output_sum
+        elif self.post_filter == 'h21_mod_h64_clk' or self.post_filter == 'h21_mod_h256_clk':
+            nco_phase = 2*np.pi*np.arange(self.h_samp_dsp)/self.h_samp_dsp
+            self.output_sum_filt = bm.mul(self.output_sum, np.sin(21 * nco_phase))
+            
         #Update Finemet model:
-        self.finemet.update(self.output_sum, self.turn_start_time + self.sample_dt)
+        self.finemet.update(self.output_sum_filt, self.turn_start_time + self.dsp_sample_dt)
         [self.finemet_dt, self.finemet_v] = self.finemet.get_output_in_window([self.turn_start_time, \
                                                                                self.turn_start_time + turn_length])
         
@@ -116,8 +155,6 @@ class dipole_channel:
         self.nco_phase = 2*np.pi*np.arange(self.h_samp)/self.h_samp
         
         #Downmix input signal at selected harmonic:
-        # self.downmix_lo_i = bm.mul(np.cos(self.h_in * self.nco_phase), np.sin(21 * self.nco_phase))
-        # self.downmix_lo_q = bm.mul(np.sin(self.h_in * self.nco_phase), np.sin(21 * self.nco_phase))
         self.downmix_lo_i = np.cos(self.h_in * self.nco_phase)
         self.downmix_lo_q = np.sin(self.h_in * self.nco_phase)
         self.downmix_out_i = bm.mul(beam_signal, self.downmix_lo_i)
