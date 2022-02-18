@@ -358,5 +358,5 @@ cb_data = {'params' : params,
     'pos_modes_vs_time' : pos_modes_vs_time,
     'width_modes_vs_time' : width_modes_vs_time}
  
-with open(working_dir + 'results.pickle', 'wb') as f:
+with open(working_dir + '/results.pickle', 'wb') as f:
     pickle.dump(cb_data, f)
