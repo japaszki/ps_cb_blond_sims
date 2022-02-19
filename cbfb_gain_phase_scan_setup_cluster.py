@@ -202,6 +202,21 @@ for run in range(N_runs):
     except:
         pass
     
+    try:
+        os.makedirs(run_dir + 'sim_outputs/')
+    except:
+        pass
+    
+    try:
+        os.makedirs(run_dir + 'sim_outputs/cb_plots/')
+    except:
+        pass
+    
+    try:
+        os.makedirs(run_dir + 'sim_outputs/profile_plots/')
+    except:
+        pass
+    
     #Copy bash script:
     os.system('cp ' + source_dir + 'run.sh ' + run_dir)
     #Copy submit file:
