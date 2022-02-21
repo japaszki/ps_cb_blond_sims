@@ -60,7 +60,7 @@ params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
 params.cbfb_params = {'N_channels' : 1,
                       'h_in' : [20],
-                      'h_out' : [20],
+                      'h_out' : [1],
                       'active' : [False],
                       'sideband_swap' : [False],
                       'gain' : [np.zeros(params.N_t+1, complex)],
