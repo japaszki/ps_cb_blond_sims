@@ -16,12 +16,12 @@ import pickle
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
+from setup_run import setup_run
 
 
 class sim_params:
     pass
         
-
 #Define static parameters:
 params = sim_params()
 
@@ -132,105 +132,23 @@ working_dir = os.getcwd()
 scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
+job_flavour = '"workday"'
+
 #Dipole mode runs:
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
     
-    #Create root directory for this run:
-    try:
-        os.makedirs(run_dir)
-    except:
-        pass   
-    
-    #Create directories for Condor outputs:
-    try:
-        os.makedirs(run_dir + 'log/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'output/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'error/')
-    except:
-        pass
-    
-    #Copy bash script:
-    os.system('cp ' + source_dir + 'run.sh ' + run_dir)
-    #Copy submit file:
-    os.system('cp ' + source_dir + 'run.sub ' + run_dir)
-    
-    #Set swept parameters for this run:
     params.exc_delta_freq = params.fs_exc
     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
     
-    #Create pickle file with parameters:
-    with open(run_dir + '/input_params.pickle', 'wb') as f:
-        pickle.dump(params, f)
-
-    #Submit job:
-    os.chdir(run_dir)
-    print('Submitting to Condor from: ' + os.getcwd())
-    os.system('condor_submit run.sub')
+    setup_run(run_dir, source_dir, params, job_flavour)
     
 #Quadrupole mode runs:
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
     
-    #Create root directory for this run:
-    try:
-        os.makedirs(run_dir)
-    except:
-        pass   
-    
-    #Create directories for Condor outputs:
-    try:
-        os.makedirs(run_dir + 'log/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'output/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'error/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/cb_plots/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/profile_plots/')
-    except:
-        pass
-    
-    #Copy bash script:
-    os.system('cp ' + source_dir + 'run.sh ' + run_dir)
-    #Copy submit file:
-    os.system('cp ' + source_dir + 'run.sub ' + run_dir)
-    
     #Set swept parameters for this run:
     params.exc_delta_freq = 2*params.fs_exc
     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
     
-    #Create pickle file with parameters:
-    with open(run_dir + '/input_params.pickle', 'wb') as f:
-        pickle.dump(params, f)
-
-    #Submit job:
-    os.chdir(run_dir)
-    print('Submitting to Condor from: ' + os.getcwd())
-    os.system('condor_submit run.sub')
+    setup_run(run_dir, source_dir, params, job_flavour)

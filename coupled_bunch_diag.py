@@ -74,6 +74,41 @@ def bunch_statistics(dt, dE, method='mean_std'):
             
         return result
 
+def plot_modes_vs_time(window_centres, pos_modes, width_modes, harmonic_number, N_modes_plt, dirname):
+    #Find dominant oscillation modes:
+    pos_dom_modes = np.argsort(np.amax(pos_modes, axis=1))
+    width_dom_modes = np.argsort(np.amax(width_modes, axis=1))
+    
+    #Plot mode amplitudes vs time:
+    if N_modes_plt > 0:
+        plt.figure('pos_modes_vs_turn', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        for i in range(1,N_modes_plt+1):
+            ax.plot(window_centres, pos_modes[pos_dom_modes[-i], :], label = 'Mode ' + str(pos_dom_modes[-i]))
+        ax.plot(window_centres, np.sum(pos_modes[pos_dom_modes[0:(harmonic_number-N_modes_plt)], :], axis=0), \
+                label = 'Remaining modes')
+        ax.set_xlabel("Turn")
+        ax.set_ylabel("Mode magnitude [s]")
+        plt.title('Bunch position modes')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.legend(loc=0, fontsize='medium')
+        plt.savefig(dirname + '/pos_modes_vs_turn.png')
+        plt.close()
+        
+        plt.figure('width_modes_vs_turn', figsize=(8,6))
+        ax = plt.axes([0.15, 0.1, 0.8, 0.8])
+        for i in range(1,N_modes_plt+1):
+            ax.plot(window_centres, width_modes[width_dom_modes[-i], :], label = 'Mode ' + str(width_dom_modes[-i]))
+        ax.plot(window_centres, np.sum(width_modes[width_dom_modes[0:(harmonic_number-N_modes_plt)], :], axis=0), \
+                label = 'Remaining modes')
+        ax.set_xlabel("Turn")
+        ax.set_ylabel("Mode magnitude [s]")
+        plt.title('Bunch width modes')
+        ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+        plt.legend(loc=0, fontsize='medium')
+        plt.savefig(dirname + '/width_modes_vs_turn.png')
+        plt.close()
+
 
 class coupled_bunch_diag:
     def __init__(self, beam, ring, tracker, cbfb, format_options, harmonic_number, dt, plot_dt, N_t):
@@ -386,38 +421,8 @@ class coupled_bunch_diag:
             pos_modes[:,i] = np.absolute(pos_modes_curr)
             width_modes[:,i] = np.absolute(width_modes_curr)
         
-        #Find dominant oscillation modes:
-        pos_dom_modes = np.argsort(np.amax(pos_modes, axis=1))
-        width_dom_modes = np.argsort(np.amax(width_modes, axis=1))
-        
-        #Plot mode amplitudes vs time:
-        if N_modes_plt > 0:
-            plt.figure('pos_modes_vs_turn', figsize=(8,6))
-            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
-            for i in range(1,N_modes_plt+1):
-                ax.plot(window_centres, pos_modes[pos_dom_modes[-i], :], label = 'Mode ' + str(pos_dom_modes[-i]))
-            ax.plot(window_centres, np.sum(pos_modes[pos_dom_modes[0:(self.harmonic_number-N_modes_plt)], :], axis=0), \
-                    label = 'Remaining modes')
-            ax.set_xlabel("Turn")
-            ax.set_ylabel("Mode magnitude [s]")
-            plt.title('Bunch position modes')
-            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.legend(loc=0, fontsize='medium')
-            plt.savefig(self.dirname + '/pos_modes_vs_turn.png')
-            plt.close()
-            
-            plt.figure('width_modes_vs_turn', figsize=(8,6))
-            ax = plt.axes([0.15, 0.1, 0.8, 0.8])
-            for i in range(1,N_modes_plt+1):
-                ax.plot(window_centres, width_modes[width_dom_modes[-i], :], label = 'Mode ' + str(width_dom_modes[-i]))
-            ax.plot(window_centres, np.sum(width_modes[width_dom_modes[0:(self.harmonic_number-N_modes_plt)], :], axis=0), \
-                    label = 'Remaining modes')
-            ax.set_xlabel("Turn")
-            ax.set_ylabel("Mode magnitude [s]")
-            plt.title('Bunch width modes')
-            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            plt.legend(loc=0, fontsize='medium')
-            plt.savefig(self.dirname + '/width_modes_vs_turn.png')
-            plt.close()
+        plot_modes_vs_time(window_centres, pos_modes, width_modes,\
+                                self.harmonic_number, N_modes_plt, self.dirname)
                 
         return [window_centres, pos_modes, width_modes]
+    

@@ -12,11 +12,10 @@ from __future__ import print_function
 import os
 from builtins import str
 import numpy as np
-import pickle
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
-
+from setup_run import setup_run
 
 class sim_params:
     pass
@@ -115,6 +114,8 @@ params.N_plt_modes = 4
 
 params.cbfb_mag_window = 3001
 
+job_flavour = '"testmatch"'
+
 working_dir = os.getcwd()
 scans_dir = '/scans/self_exc_test/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -123,54 +124,4 @@ N_runs = 1
 
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
-    
-    #Create root directory for this run:
-    try:
-        os.makedirs(run_dir)
-    except:
-        pass   
-    
-    #Create directories for Condor outputs:
-    try:
-        os.makedirs(run_dir + 'log/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'output/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'error/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/cb_plots/')
-    except:
-        pass
-    
-    try:
-        os.makedirs(run_dir + 'sim_outputs/profile_plots/')
-    except:
-        pass
-    
-    #Copy bash script:
-    os.system('cp ' + source_dir + 'run.sh ' + run_dir)
-    #Copy submit file:
-    os.system('cp ' + source_dir + 'run.sub ' + run_dir)
-    
-    #Create pickle file with parameters:
-    with open(run_dir + '/input_params.pickle', 'wb') as f:
-        pickle.dump(params, f)
-
-    #Submit job:
-    os.chdir(run_dir)
-    print('Submitting to Condor from: ' + os.getcwd())
-    os.system('condor_submit run.sub')
+    setup_run(run_dir, source_dir, params, job_flavour)
