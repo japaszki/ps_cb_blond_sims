@@ -31,7 +31,7 @@ source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 #Baseline dipole run:
 run_dir = working_dir + scans_dir + 'dipole_run' + str(0) + '/'
 
-with open(run_dir + 'input_params.pickle', 'rb') as f:
+with open(run_dir + 'results.pickle', 'rb') as f:
      data = pickle.load(f)
     
 base_dipole_cbfb_usb = data['cbfb_usb_mag']
