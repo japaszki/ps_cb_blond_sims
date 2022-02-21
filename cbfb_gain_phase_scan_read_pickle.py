@@ -20,9 +20,6 @@ this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 class sim_params:
     pass
-        
-with open('self_exc_test_results.pickle', 'rb') as f:
-        data = pickle.load(f)
 
 N_runs_fb = 160
 plot_mode = 20
