@@ -12,7 +12,6 @@ from __future__ import print_function
 import os
 from builtins import str
 import numpy as np
-import pickle
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
@@ -65,8 +64,8 @@ params.cbfb_params = {'N_channels' : 1,
                       'active' : [False],
                       'sideband_swap' : [False],
                       'gain' : [np.zeros(params.N_t+1, complex)],
-                      'pre_filter' : 'none',
-                      'post_filter' : 'none'}
+                      'pre_filter' : 'peak',
+                      'post_filter' : 'h21_mod_h256_clk'}
 
 finemet_dt = 5e-9
 finemet_f0 = 1.96e6
@@ -129,7 +128,7 @@ cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)
 N_runs = cbfb_gain_runs.shape[0]
 
 working_dir = os.getcwd()
-scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
+scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 job_flavour = '"workday"'
