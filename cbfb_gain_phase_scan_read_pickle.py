@@ -39,7 +39,7 @@ base_dipole_cbfb_lsb = data['cbfb_lsb_mag']
 
 base_dipole_pos_mode_amp = data['pos_mode_amp']
 base_dipole_width_mode_amp = data['width_mode_amp']
-N_modes = base_dipole_pos_mode_amp.shape[0]
+N_modes = len(base_dipole_pos_mode_amp)
 
 #Baseline quad run:
 run_dir = working_dir + scans_dir + 'quad_run' + str(0) + '/'
