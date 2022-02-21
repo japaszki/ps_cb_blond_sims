@@ -43,7 +43,7 @@ base_dipole_width_mode_amp = data['width_mode_amp'][plot_mode]
 #Baseline quad run:
 run_dir = working_dir + scans_dir + 'quad_run' + str(0) + '/'
 
-with open(run_dir + 'input_params.pickle', 'rb') as f:
+with open(run_dir + 'results.pickle', 'rb') as f:
      data = pickle.load(f)
     
 base_quad_cbfb_usb = data['cbfb_usb_mag']
@@ -65,7 +65,7 @@ dipole_exc_width_amp =  np.empty(N_runs_fb)
 for run in range(N_runs_fb):
     run_dir = working_dir + scans_dir + 'dipole_run' + str(run+1) + '/'
     
-    with open(run_dir + 'input_params.pickle', 'rb') as f:
+    with open(run_dir + 'results.pickle', 'rb') as f:
         data = pickle.load(f)
      
     dipole_fb_gains[run] = np.abs(data['params'].cbfb_params['gain'][0][0])
@@ -86,7 +86,7 @@ quad_exc_width_amp =  np.empty(N_runs_fb)
 for run in range(N_runs_fb):
     run_dir = working_dir + scans_dir + 'quad_run' + str(run+1) + '/'
     
-    with open(run_dir + 'input_params.pickle', 'rb') as f:
+    with open(run_dir + 'results.pickle', 'rb') as f:
         data = pickle.load(f)
     
     quad_fb_gains[run] = np.abs(data['params'].cbfb_params['gain'][0][0])
