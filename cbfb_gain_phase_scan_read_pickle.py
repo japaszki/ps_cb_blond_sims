@@ -14,9 +14,6 @@ import numpy as np
 import pylab as plt
 import pickle
 import os
-# from coupled_bunch_diag import plot_modes_vs_time
-
-this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 class sim_params:
     pass
@@ -24,9 +21,8 @@ class sim_params:
 N_runs_fb = 160
 plot_modes = [1,20]
     
-working_dir = os.getcwd()
+working_dir = os.getcwd() + '/'
 scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
-source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 #Baseline dipole run:
 run_dir = working_dir + scans_dir + 'dipole_run' + str(0) + '/'
@@ -101,7 +97,7 @@ for run in range(N_runs_fb):
 quad_unique_gains = np.unique(quad_fb_gains.round(decimals=8))
 
 try:
-    os.makedirs(this_directory + 'cbfb_gain_phase_scan_plots/')
+    os.makedirs(working_dir + 'cbfb_gain_phase_scan_plots/')
 except:
     pass
 
@@ -110,24 +106,32 @@ for mode in plot_modes:
     plt.figure('dipole_amp_vs_phase')
     for i in range(dipole_unique_gains.shape[0]):
         plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
-        # plot_indices = (dipole_fb_gains == dipole_unique_gains[i])
-        plt.semilogy(dipole_fb_phases[plot_indices], dipole_exc_pos_amp[plot_indices, mode] /\
-                 base_dipole_pos_mode_amp[mode], label='Gain = ' + str(dipole_unique_gains[i]))
+        phase_plt = dipole_fb_phases[plot_indices]
+        osc_plt = dipole_exc_pos_amp[plot_indices, mode] / base_dipole_pos_mode_amp[mode]
+        sort_indices = np.argsort(phase_plt)
+        
+        plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+                     label='Gain = ' + str(dipole_unique_gains[i]))
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('CBFB phase [rad]')
     plt.ylabel('Relative oscillation amplitude')
     plt.title('Dipole mode ' + str(mode))
-    plt.savefig(this_directory + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_mode_' + str(mode) + '.png')
+    plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_mode_' + str(mode) + '.png')
+    plt.close()
 
 for mode in plot_modes:
     plt.figure('quad_amp_vs_phase')
     for i in range(quad_unique_gains.shape[0]):
         plot_indices = np.isclose(quad_fb_gains, quad_unique_gains[i], rtol=1e-3)
-        # plot_indices = (quad_fb_gains == quad_unique_gains[i])
-        plt.semilogy(quad_fb_phases[plot_indices], quad_exc_width_amp[plot_indices, mode] /\
-                 base_quad_width_mode_amp[mode], label='Gain = ' + str(quad_unique_gains[i]))
+        phase_plt = quad_fb_phases[plot_indices]
+        osc_plt = quad_exc_width_amp[plot_indices, mode] / base_quad_width_mode_amp[mode]
+        sort_indices = np.argsort(phase_plt)
+        
+        plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+                     label='Gain = ' + str(quad_unique_gains[i]))
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('CBFB phase [rad]')
     plt.ylabel('Relative oscillation amplitude')
     plt.title('Qudrupole mode ' + str(mode))
-    plt.savefig(this_directory + 'cbfb_gain_phase_scan_plots/quad_amp_vs_phase_mode_' + str(mode) + '.png')
+    plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/quad_amp_vs_phase_mode_' + str(mode) + '.png')
+    plt.close()
