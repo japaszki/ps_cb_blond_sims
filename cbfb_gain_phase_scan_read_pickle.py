@@ -64,6 +64,7 @@ dipole_exc_width_amp =  np.empty(N_runs_fb)
 
 for run in range(N_runs_fb):
     run_dir = working_dir + scans_dir + 'dipole_run' + str(run+1) + '/'
+    print('Reading dipole run ' + str(run))
     
     with open(run_dir + 'results.pickle', 'rb') as f:
         data = pickle.load(f)
@@ -85,6 +86,7 @@ quad_exc_width_amp =  np.empty(N_runs_fb)
 
 for run in range(N_runs_fb):
     run_dir = working_dir + scans_dir + 'quad_run' + str(run+1) + '/'
+    print('Reading quadrupole run ' + str(run))
     
     with open(run_dir + 'results.pickle', 'rb') as f:
         data = pickle.load(f)
@@ -96,7 +98,10 @@ for run in range(N_runs_fb):
 
 quad_unique_gains = np.unique(quad_fb_gains)
 
-
+try:
+    os.makedirs(this_directory + 'cbfb_gain_phase_scan_plots/')
+except:
+    pass
 
 #Relative mode amplitude after CBFB on:
 plt.figure('dipole_amp_vs_phase')
