@@ -116,7 +116,7 @@ N_phases = 32
 phase_vals = np.linspace(0, 2*np.pi, N_phases)
 
 N_gains = 4
-gain_vals = [1e-4, 3e-4, 1e-3, 3e-3]
+gain_vals = [3e-4, 1e-3, 3e-3, 1e-2]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)

@@ -89,7 +89,7 @@ params.fb_diag_start_delay = 100
 
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
-params.exc_v[:] = 0
+params.exc_v[1000:2000] = 500
 params.fs_exc = 442.07
 params.exc_harmonic = 20
 params.exc_delta_freq = params.fs_exc
