@@ -188,7 +188,7 @@ class coupled_bunch_diag:
                         label='Bunch energy spread deviation')
             ax.plot(self.bunch_pos_dt[:, line], 1e-6*output_spline_all_chans(self.bunch_pos_dt[:, line], 1),\
                     label='1e-6 x kick gradient at bunch centre')
-            ax.plot(self.cbfb.dsp_sample_dt, 100*self.cbfb.beam_signal_filt, label='100x filtered beam signal')
+            ax.plot(self.cbfb.dsp_sample_dt, 1e-5*self.cbfb.beam_signal_filt, label='1e-5x filtered beam signal')
             ax.set_xlabel("Time [s]")
             ax.set_ylabel("dE [eV]")
             plt.title('Turn = ' + str(turn))

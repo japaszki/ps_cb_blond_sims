@@ -24,7 +24,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 30000     # Number of turns to track
+params.N_t = 300000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -53,7 +53,6 @@ params.filter_front_wake = 0.5
 #Beam parameters:
 params.n_bunches = 21
 params.bunch_spacing_buckets = 1
-params.bunch_length = 4*2/c
 params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
@@ -89,7 +88,7 @@ params.fb_diag_start_delay = 100
 
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
-params.exc_v[1000:2000] = 500
+params.exc_v[:] = 0
 params.fs_exc = 442.07
 params.exc_harmonic = 20
 params.exc_delta_freq = params.fs_exc
@@ -120,8 +119,11 @@ working_dir = os.getcwd()
 scans_dir = '/scans/self_exc_test/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
-N_runs = 1
+N_runs = 3
+
+bunch_lengths_m = [0.5, 1, 2]
 
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
+    params.bunch_length = 4*bunch_lengths_m[run]/c
     setup_run(run_dir, source_dir, params, job_flavour)
