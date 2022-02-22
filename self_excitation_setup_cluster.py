@@ -24,7 +24,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 300000     # Number of turns to track
+params.N_t = 30000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -43,11 +43,11 @@ params.voltage_program = 168e3
 params.phi_offset = 0
 
 #Wake impedance
-params.resonator_list = [Resonators(5*10*7.691696828196692195e+02,\
+params.resonator_list = [Resonators(10*7.691696828196692195e+02,\
                                     9.860944280723674223e+06, \
                                         8.157582101860359813e+00)]
 
-params.n_turns_memory = 100
+params.n_turns_memory = 1000
 params.filter_front_wake = 0.5
     
 #Beam parameters:

@@ -107,7 +107,7 @@ matched_from_distribution_density_multibunch(beam, ring,
                              intensity_list=params.intensity_list,
                              minimum_n_macroparticles=params.minimum_n_macroparticles,
                              TotalInducedVoltage=longitudinal_intensity,
-                             n_iterations_input=4, seed=7878)
+                             n_iterations_input=8, seed=7878)
 
 bunchmonitor = BunchMonitor(ring, rf, beam, output_dir, Profile=tomo_profile)
 
