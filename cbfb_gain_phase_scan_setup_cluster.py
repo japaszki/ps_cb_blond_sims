@@ -88,7 +88,7 @@ params.fb_diag_start_delay = 100
 
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
-params.exc_v[0:10000] = 1.5e3
+params.exc_v[0:10000] = 8e3
 params.fs_exc = 442.07
 params.exc_harmonic = 20
 params.exc_mod_harm = 0
@@ -115,8 +115,8 @@ params.cbfb_mag_window = 3001
 N_phases = 32
 phase_vals = np.linspace(0, 2*np.pi, N_phases)
 
-N_gains = 5
-gain_vals = [1e-4, 3e-4, 1e-3, 3e-3, 1e-2]
+N_gains = 4
+gain_vals = [1e-4, 3e-4, 1e-3, 3e-3]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
