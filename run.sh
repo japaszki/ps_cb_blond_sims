@@ -7,4 +7,5 @@ export PYTHONPATH="/afs/cern.ch/user/j/japaszki/blond_sims/ps_cb_blond_sims/:$PY
 
 python /afs/cern.ch/user/j/japaszki/blond_sims/ps_cb_blond_sims/run.py
 
-tar -zcvf results.tar.gz plots.tar.gz sim_outputs
+tar -zcvf results.tar.gz sim_outputs
+

@@ -170,7 +170,7 @@ class coupled_bunch_diag:
             ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
             ax.plot(self.bunch_pos_dt[:, line], self.bunch_pos_dE[:,line], label='Mean bunch energy offset')
             ax.plot(self.bunch_pos_dt[:, line], 100*output_spline_all_chans(self.bunch_pos_dt[:, line]),\
-                    label='100x baseband signal')
+                    label='100x LLRF output signal')
             ax.plot(self.cbfb.finemet_dt, 100*self.cbfb.finemet_v, label='100x cavity voltage')
             ax.set_xlabel("Time [s]")
             ax.set_ylabel("dE [eV]")
@@ -188,7 +188,7 @@ class coupled_bunch_diag:
                         label='Bunch energy spread deviation')
             ax.plot(self.bunch_pos_dt[:, line], 1e-6*output_spline_all_chans(self.bunch_pos_dt[:, line], 1),\
                     label='1e-6 x kick gradient at bunch centre')
-            ax.plot(self.cbfb.dsp_sample_dt, 1e-5*self.cbfb.beam_signal_filt, label='1e-5x filtered beam signal')
+            ax.plot(self.cbfb.dsp_sample_dt, 1e-7*self.cbfb.beam_signal_filt, label='1e-7x filtered beam signal')
             ax.set_xlabel("Time [s]")
             ax.set_ylabel("dE [eV]")
             plt.title('Turn = ' + str(turn))

@@ -18,7 +18,7 @@ import os
 class sim_params:
     pass
 
-N_runs_fb = 160
+N_runs_fb = 128
 plot_modes = [20]
     
 working_dir = os.getcwd() + '/'

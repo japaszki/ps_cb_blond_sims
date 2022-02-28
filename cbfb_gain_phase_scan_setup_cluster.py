@@ -25,7 +25,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 30000     # Number of turns to track
+params.N_t = 20000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -62,10 +62,10 @@ params.cbfb_params = {'N_channels' : 1,
                       'h_in' : [20],
                       'h_out' : [1],
                       'active' : [False],
-                      'sideband_swap' : [False],
+                      'sideband_swap' : [True],
                       'gain' : [np.zeros(params.N_t+1, complex)],
-                      'pre_filter' : 'peak',
-                      'post_filter' : 'h21_mod_h256_clk'}
+                      'pre_filter' : 'none',
+                      'post_filter' : 'none'}
 
 finemet_dt = 5e-9
 finemet_f0 = 1.96e6
@@ -78,8 +78,8 @@ params.rf_params = {'dt' : finemet_dt,
                     'output_delay' : 1e-8,
                     'history_length' : 1e-3}
 
-params.start_cbfb_turn = 15000
-params.end_cbfb_turn = 30000
+params.start_cbfb_turn = 12000
+params.end_cbfb_turn = 20000
 params.cbfb_active_mask = [True]
 
 params.fb_diag_dt = 25
@@ -88,7 +88,6 @@ params.fb_diag_start_delay = 100
 
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
-params.exc_v[0:10000] = 8e3
 params.fs_exc = 442.07
 params.exc_harmonic = 20
 params.exc_mod_harm = 0
@@ -101,8 +100,8 @@ params.phase_plot_max_dE = 100e6
 params.tomo_n_slices = 10000
 params.tomo_dt = 10
 params.fft_n_slices = 64
-params.fft_start_turn = 20000
-params.fft_end_turn = 26000
+params.fft_start_turn = 14000
+params.fft_end_turn = 20000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 6*params.fs_exc
 
@@ -112,11 +111,18 @@ params.N_plt_modes = 4
 
 params.cbfb_mag_window = 3001
 
-N_phases = 32
-phase_vals = np.linspace(0, 2*np.pi, N_phases)
+dipole_exc_v = 2e3
+quad_exc_v = 1e4
 
-N_gains = 4
-gain_vals = [3e-4, 1e-3, 3e-3, 1e-2]
+# N_phases = 32
+# phase_vals = np.linspace(0, 2*np.pi, N_phases)
+
+phase_vals = [0.8, 3.14+0.8]
+
+# N_gains = 4
+# gain_vals = [3e-4, 1e-3, 3e-3, 1e-2]
+
+gain_vals = [1e-5, 1e-4]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
@@ -128,12 +134,20 @@ cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)
 N_runs = cbfb_gain_runs.shape[0]
 
 working_dir = os.getcwd()
-scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
-
 job_flavour = '"workday"'
 
+
+
+#Baseline CBFB parameters:
+
+scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
+
+params.cbfb_params['pre_filter'] = 'none'
+params.cbfb_params['post_filter'] = 'none'
+
 #Dipole mode runs:
+params.exc_v[0:10000] = dipole_exc_v
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
     
@@ -143,6 +157,51 @@ for run in range(N_runs):
     setup_run(run_dir, source_dir, params, job_flavour)
     
 #Quadrupole mode runs:
+params.exc_v[0:10000] = quad_exc_v
+for run in range(N_runs):
+    run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
+    
+    #Set swept parameters for this run:
+    params.exc_delta_freq = 2*params.fs_exc
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+    
+    setup_run(run_dir, source_dir, params, job_flavour)
+    
+
+
+
+#Peak detector and h21 modulation:
+    
+phase_vals = [0.8, 3.14+0.8]
+gain_vals = [3e-4, 3e-3]
+
+#Arrange 2D grid of gain and phase values:
+[cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
+
+#Convert to 1D arrays, with one run of zero gain to use as reference:
+cbfb_gain_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_gain_2d)))
+cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)))
+
+N_runs = cbfb_gain_runs.shape[0]
+
+
+scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
+
+params.cbfb_params['pre_filter'] = 'peak'
+params.cbfb_params['post_filter'] = 'h21_mod_h256_clk'
+
+#Dipole mode runs:
+params.exc_v[0:10000] = dipole_exc_v
+for run in range(N_runs):
+    run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
+    
+    params.exc_delta_freq = params.fs_exc
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+    
+    setup_run(run_dir, source_dir, params, job_flavour)
+    
+#Quadrupole mode runs:
+params.exc_v[0:10000] = quad_exc_v
 for run in range(N_runs):
     run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
     

@@ -113,7 +113,7 @@ params.N_plt_modes = 4
 
 params.cbfb_mag_window = 3001
 
-job_flavour = '"testmatch"'
+job_flavour = '"nextweek"'
 
 working_dir = os.getcwd()
 scans_dir = '/scans/self_exc_test/'
