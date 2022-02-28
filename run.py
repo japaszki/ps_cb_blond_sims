@@ -32,7 +32,7 @@ from blond.utils import bmath as bm
 class sim_params:
     pass
 
-# os.chdir('scans/cbfb_baseline_gain_phase_scan/dipole_run4/')
+# os.chdir('scans/cbfb_baseline_gain_phase_scan/quad_run2/')
 
 working_dir = os.getcwd()
 output_dir = working_dir + '/sim_outputs/'

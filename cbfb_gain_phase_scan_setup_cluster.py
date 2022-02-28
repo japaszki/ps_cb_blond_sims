@@ -114,14 +114,15 @@ params.cbfb_mag_window = 3001
 dipole_exc_v = 2e3
 quad_exc_v = 1e4
 
-# N_phases = 32
-# phase_vals = np.linspace(0, 2*np.pi, N_phases)
+N_phases = 8#32
+phase_vals = np.linspace(0, 2*np.pi, N_phases)
 
-phase_vals = [0.8, 3.14+0.8]
-
-# N_gains = 4
+# N_gains = 3
 # gain_vals = [3e-4, 1e-3, 3e-3, 1e-2]
 
+
+
+# phase_vals = [0.8, 3.14+0.8]
 gain_vals = [1e-5, 1e-4]
 
 #Arrange 2D grid of gain and phase values:
@@ -172,7 +173,7 @@ for run in range(N_runs):
 
 #Peak detector and h21 modulation:
     
-phase_vals = [0.8, 3.14+0.8]
+# phase_vals = [0.8, 3.14+0.8]
 gain_vals = [3e-4, 3e-3]
 
 #Arrange 2D grid of gain and phase values:
