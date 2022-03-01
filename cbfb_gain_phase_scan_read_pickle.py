@@ -135,3 +135,36 @@ for mode in plot_modes:
     plt.title('Qudrupole mode ' + str(mode))
     plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/quad_amp_vs_phase_mode_' + str(mode) + '.png')
     plt.close()
+    
+#Amplitude of all mode summed:
+plt.figure('dipole_amp_vs_phase_all_modes')
+for i in range(dipole_unique_gains.shape[0]):
+    plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
+    phase_plt = dipole_fb_phases[plot_indices]
+    osc_plt = np.sum(dipole_exc_pos_amp[plot_indices, :], axis=1) / np.sum(base_dipole_pos_mode_amp[:])
+    sort_indices = np.argsort(phase_plt)
+    
+    plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+                  label='Gain = ' + str(dipole_unique_gains[i]))
+plt.legend(loc=0, fontsize='medium')
+plt.xlabel('CBFB phase [rad]')
+plt.ylabel('Relative oscillation amplitude')
+plt.title('All dipole modes')
+plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_all_modes.png')
+plt.close()
+
+plt.figure('quad_amp_vs_phase_all_modes')
+for i in range(quad_unique_gains.shape[0]):
+    plot_indices = np.isclose(quad_fb_gains, quad_unique_gains[i], rtol=1e-3)
+    phase_plt = quad_fb_phases[plot_indices]
+    osc_plt = np.sum(quad_exc_pos_amp[plot_indices, :], axis=1) / np.sum(base_quad_pos_mode_amp[:])
+    sort_indices = np.argsort(phase_plt)
+    
+    plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+                  label='Gain = ' + str(quad_unique_gains[i]))
+plt.legend(loc=0, fontsize='medium')
+plt.xlabel('CBFB phase [rad]')
+plt.ylabel('Relative oscillation amplitude')
+plt.title('All quadrupole modes')
+plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/quad_amp_vs_phase_all_modes.png')
+plt.close()
