@@ -22,7 +22,7 @@ N_runs_fb = 16
 plot_modes = [20]
     
 working_dir = os.getcwd() + '/'
-scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
+scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
 
 #Baseline dipole run:
 run_dir = working_dir + scans_dir + 'dipole_run' + str(0) + '/'
