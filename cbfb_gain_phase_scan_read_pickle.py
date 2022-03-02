@@ -19,7 +19,7 @@ class sim_params:
     pass
 
 N_runs_fb = 64
-plot_modes = [20]
+plot_modes = [1, 20]
     
 working_dir = os.getcwd() + '/'
 scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
