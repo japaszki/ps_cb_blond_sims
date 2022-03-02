@@ -141,7 +141,8 @@ plt.figure('dipole_amp_vs_phase_all_modes')
 for i in range(dipole_unique_gains.shape[0]):
     plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
     phase_plt = dipole_fb_phases[plot_indices]
-    osc_plt = np.sum(dipole_exc_pos_amp[plot_indices, :], axis=1) / np.sum(base_dipole_pos_mode_amp[:])
+    osc_plt = np.power(np.sum(np.power(dipole_exc_pos_amp[plot_indices, :], 2), axis=1), 0.5) / \
+        np.power(np.sum(np.power(base_dipole_pos_mode_amp[:], 2)), 0.5)
     sort_indices = np.argsort(phase_plt)
     
     plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
@@ -157,7 +158,8 @@ plt.figure('quad_amp_vs_phase_all_modes')
 for i in range(quad_unique_gains.shape[0]):
     plot_indices = np.isclose(quad_fb_gains, quad_unique_gains[i], rtol=1e-3)
     phase_plt = quad_fb_phases[plot_indices]
-    osc_plt = np.sum(quad_exc_pos_amp[plot_indices, :], axis=1) / np.sum(base_quad_pos_mode_amp[:])
+    osc_plt = np.power(np.sum(np.power(quad_exc_pos_amp[plot_indices, :], 2), axis=1), 0.5) / \
+        np.power(np.sum(np.power(base_quad_pos_mode_amp[:], 2)), 0.5)
     sort_indices = np.argsort(phase_plt)
     
     plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
