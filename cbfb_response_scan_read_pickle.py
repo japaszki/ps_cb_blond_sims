@@ -57,7 +57,7 @@ for run in range(N_runs):
     
     peak_pos_amp[run, :] = data['pos_mode_amp']
     peak_width_amp[run, :] = data['width_mode_amp']
-    peak_bb[run] = data['cbfb_usb_mag'] + data['cbfb_lsb_mag']
+    peak_bb[run] = data['cbfb_usb_mag'][0] + data['cbfb_lsb_mag'][0]
 
 
 
