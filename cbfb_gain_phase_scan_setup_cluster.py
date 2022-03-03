@@ -62,7 +62,7 @@ params.cbfb_params = {'N_channels' : 1,
                       'h_in' : [20],
                       'h_out' : [1],
                       'active' : [False],
-                      'sideband_swap' : [True],
+                      'sideband_swap' : [False],
                       'gain' : [np.zeros(params.N_t+1, complex)],
                       'pre_filter' : 'none',
                       'post_filter' : 'none'}
@@ -138,33 +138,35 @@ job_flavour = '"workday"'
 
 
 
-#Baseline CBFB parameters:
-
-scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
-
-params.cbfb_params['pre_filter'] = 'none'
-params.cbfb_params['post_filter'] = 'none'
-
-#Dipole mode runs:
-params.exc_v[0:10000] = dipole_exc_v
-for run in range(N_runs):
-    run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
-    
-    params.exc_delta_freq = params.fs_exc
-    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
-    
-    setup_run(run_dir, source_dir, params, job_flavour)
-    
-#Quadrupole mode runs:
-params.exc_v[0:10000] = quad_exc_v
-for run in range(N_runs):
-    run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
-    
-    #Set swept parameters for this run:
-    params.exc_delta_freq = 2*params.fs_exc
-    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
-    
-    setup_run(run_dir, source_dir, params, job_flavour)
+# =============================================================================
+# #Baseline CBFB parameters:
+# 
+# scans_dir = '/scans/cbfb_baseline_gain_phase_scan/'
+# 
+# params.cbfb_params['pre_filter'] = 'none'
+# params.cbfb_params['post_filter'] = 'none'
+# 
+# #Dipole mode runs:
+# params.exc_v[0:10000] = dipole_exc_v
+# for run in range(N_runs):
+#     run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
+#     
+#     params.exc_delta_freq = params.fs_exc
+#     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+#     
+#     setup_run(run_dir, source_dir, params, job_flavour)
+#     
+# #Quadrupole mode runs:
+# params.exc_v[0:10000] = quad_exc_v
+# for run in range(N_runs):
+#     run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
+#     
+#     #Set swept parameters for this run:
+#     params.exc_delta_freq = 2*params.fs_exc
+#     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+#     
+#     setup_run(run_dir, source_dir, params, job_flavour)
+# =============================================================================
     
 
 
@@ -182,7 +184,7 @@ cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)
 N_runs = cbfb_gain_runs.shape[0]
 
 
-scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
+scans_dir = '/scans/cbfb_peak_h21_noswap_gain_phase_scan/'
 
 params.cbfb_params['pre_filter'] = 'peak'
 params.cbfb_params['post_filter'] = 'h21_mod_h256_clk'
