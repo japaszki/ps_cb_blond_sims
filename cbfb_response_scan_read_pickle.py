@@ -39,7 +39,7 @@ for run in range(N_runs):
     
     baseline_pos_amp[run, :] = data['pos_mode_amp']
     baseline_width_amp[run, :] = data['width_mode_amp']
-    baseline_bb[run] = data['cbfb_usb_mag'] + data['cbfb_lsb_mag']
+    baseline_bb[run] = data['cbfb_usb_mag'][0] + data['cbfb_lsb_mag'][0]
 
 
 #Get data for peak detector runs:

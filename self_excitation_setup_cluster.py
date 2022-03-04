@@ -24,7 +24,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 300000     # Number of turns to track
+params.N_t = 150000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -65,7 +65,7 @@ params.cbfb_params = {'N_channels' : 1,
                       'pre_filter' : 'none',
                       'post_filter' : 'none'}
 
-params.cbfb_params['gain'][0][:] = 1e-3 * np.exp(2j * np.pi * 0.0)
+params.cbfb_params['gain'][0][:] = 1e-4 * np.exp(2j * np.pi * 0.0)
 
 finemet_dt = 5e-9
 finemet_f0 = 1.96e6
@@ -78,8 +78,8 @@ params.rf_params = {'dt' : finemet_dt,
                     'output_delay' : 1e-8,
                     'history_length' : 1e-6}
 
-params.start_cbfb_turn = 200000
-params.end_cbfb_turn = 250000
+params.start_cbfb_turn = 100000
+params.end_cbfb_turn = 120000
 params.cbfb_active_mask = [True] #Only these channels get activated on SCBFB
 
 params.fb_diag_dt = 25
@@ -102,8 +102,8 @@ params.phase_plot_max_dE = 100e6
 params.tomo_n_slices = 10000
 params.tomo_dt = 10
 params.fft_n_slices = 64
-params.fft_start_turn = 180000
-params.fft_end_turn = 200000
+params.fft_start_turn = 80000
+params.fft_end_turn = 100000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 6*params.fs_exc
 
