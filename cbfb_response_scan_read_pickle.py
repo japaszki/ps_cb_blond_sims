@@ -70,8 +70,9 @@ except:
 #Response magnitude vs position amplitude:
 for mode in plot_modes:
     plt.figure('baseline_bb_vs_pos_osc_amp')
-    sort_indices = np.argsort(baseline_pos_amp)   
-    plt.semilogy(baseline_pos_amp[sort_indices], baseline_bb[sort_indices])
+    baseline_pos_amp_mode = baseline_pos_amp[:, mode]
+    sort_indices = np.argsort(baseline_pos_amp_mode)   
+    plt.semilogy(baseline_pos_amp_mode[sort_indices], baseline_bb[sort_indices])
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('Position oscillation amplitude [s]')
     plt.ylabel('Baseband response magnitude')
@@ -80,8 +81,9 @@ for mode in plot_modes:
     plt.close()
     
     plt.figure('baseline_bb_vs_width_osc_amp')
-    sort_indices = np.argsort(baseline_width_amp)   
-    plt.semilogy(baseline_width_amp[sort_indices], baseline_bb[sort_indices])
+    baseline_width_amp_mode = baseline_width_amp[:, mode]
+    sort_indices = np.argsort(baseline_width_amp_mode)   
+    plt.semilogy(baseline_width_amp_mode[sort_indices], baseline_bb[sort_indices])
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('Width oscillation amplitude [s]')
     plt.ylabel('Baseband response magnitude')
@@ -90,8 +92,9 @@ for mode in plot_modes:
     plt.close()
     
     plt.figure('peak_bb_vs_pos_osc_amp')
-    sort_indices = np.argsort(peak_pos_amp)   
-    plt.semilogy(peak_pos_amp[sort_indices], peak_bb[sort_indices])
+    peak_pos_amp_mode = peak_pos_amp[:, mode]
+    sort_indices = np.argsort(peak_pos_amp_mode)   
+    plt.semilogy(peak_pos_amp_mode[sort_indices], peak_bb[sort_indices])
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('Position oscillation amplitude [s]')
     plt.ylabel('Baseband response magnitude')
@@ -100,8 +103,9 @@ for mode in plot_modes:
     plt.close()
     
     plt.figure('peak_bb_vs_width_osc_amp')
-    sort_indices = np.argsort(peak_width_amp)   
-    plt.semilogy(peak_width_amp[sort_indices], peak_bb[sort_indices])
+    peak_width_amp_mode = peak_width_amp[:, mode]
+    sort_indices = np.argsort(peak_width_amp_mode)   
+    plt.semilogy(peak_width_amp_mode[sort_indices], peak_bb[sort_indices])
     plt.legend(loc=0, fontsize='medium')
     plt.xlabel('Width oscillation amplitude [s]')
     plt.ylabel('Baseband response magnitude')
