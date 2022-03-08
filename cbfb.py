@@ -37,6 +37,7 @@ class feedback:
             self.bucket_max = np.zeros(21)
         elif self.pre_filter == 'width':
             self.h_samp_adc = 64
+            self.bucket_width = np.zeros(21)
             
         turn = self.tracker.RingAndRFSection_list[0].counter
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
