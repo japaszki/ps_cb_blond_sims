@@ -214,7 +214,7 @@ job_flavour = '"workday"'
 
 
 #Width measurement and h21 modulation:
-gain_vals = [5e-4, 5e-3]
+gain_vals = [1e17, 1e19]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
