@@ -35,6 +35,8 @@ class feedback:
             self.samples_per_bucket = 40
             self.h_samp_adc = 21 * self.samples_per_bucket
             self.bucket_max = np.zeros(21)
+        elif self.pre_filter == 'width':
+            self.h_samp_adc = 64
             
         turn = self.tracker.RingAndRFSection_list[0].counter
         self.profile = Profile(self.beam, CutOptions(cut_left=0, 
@@ -84,6 +86,18 @@ class feedback:
             #Resample to DSP sample rate:
             bucket_dt = np.linspace(0, turn_length * 20 / 21, 21)
             interp_spline = scipy.interpolate.CubicSpline(bucket_dt, self.bucket_max)
+            self.beam_signal_filt = interp_spline(self.dsp_sample_dt)
+        elif self.pre_filter == 'width':
+            bucket_length = turn_length / 21
+            
+            #Measure bunch width in each bucket:
+            for i in range(21):
+                particle_indices = (self.beam.dt >= i * bucket_length) & (self.beam.dt < (i+1) * bucket_length)
+                self.bucket_width[i] = bm.std(self.beam.dt[particle_indices])
+                
+            #Resample to DSP sample rate:
+            bucket_dt = np.linspace(0, turn_length * 20 / 21, 21)
+            interp_spline = scipy.interpolate.CubicSpline(bucket_dt, self.bucket_width)
             self.beam_signal_filt = interp_spline(self.dsp_sample_dt)
     
         #Update each channel:

@@ -131,21 +131,33 @@ job_flavour = '"workday"'
 
 
 #Baseline CBFB parameters:
-scans_dir = '/scans/cbfb_response_scan_baseline/'
-params.cbfb_params['pre_filter'] = 'none'
+# scans_dir = '/scans/cbfb_response_scan_baseline/'
+# params.cbfb_params['pre_filter'] = 'none'
 
-for run in range(N_runs):
-    run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
+# for run in range(N_runs):
+#     run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
     
-    params.exc_v[0:10000] = voltage_runs[run]
-    params.exc_delta_freq = freq_runs[run]
+#     params.exc_v[0:10000] = voltage_runs[run]
+#     params.exc_delta_freq = freq_runs[run]
     
-    setup_run(run_dir, source_dir, params, job_flavour)
+#     setup_run(run_dir, source_dir, params, job_flavour)
 
 
 #Peak detector and h21 modulation:
-scans_dir = '/scans/cbfb_response_scan_peak/'
-params.cbfb_params['pre_filter'] = 'peak'
+# scans_dir = '/scans/cbfb_response_scan_peak/'
+# params.cbfb_params['pre_filter'] = 'peak'
+
+# #Dipole mode runs:
+# for run in range(N_runs):
+#     run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
+    
+#     params.exc_v[0:10000] = voltage_runs[run]
+#     params.exc_delta_freq = freq_runs[run]
+    
+#     setup_run(run_dir, source_dir, params, job_flavour)
+
+scans_dir = '/scans/cbfb_response_scan_width/'
+params.cbfb_params['pre_filter'] = 'width'
 
 #Dipole mode runs:
 for run in range(N_runs):
@@ -155,3 +167,4 @@ for run in range(N_runs):
     params.exc_delta_freq = freq_runs[run]
     
     setup_run(run_dir, source_dir, params, job_flavour)
+
