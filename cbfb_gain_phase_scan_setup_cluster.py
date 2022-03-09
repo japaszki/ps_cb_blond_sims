@@ -74,7 +74,7 @@ finemet_h = resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt
 
 params.rf_params = {'dt' : finemet_dt, 
                     'impulse_response' : finemet_h, 
-                    'max_voltage' : 1e5, 
+                    'max_voltage' : 1e8,#1e5, 
                     'output_delay' : 1e-8,
                     'history_length' : 1e-3}
 
@@ -112,7 +112,7 @@ params.N_plt_modes = 4
 params.cbfb_mag_window = 3001
 
 dipole_exc_v = 2e3
-quad_exc_v = 1e4
+quad_exc_v = 6e3
 
 N_phases = 32
 phase_vals = np.linspace(0, 2*np.pi, N_phases)
@@ -214,7 +214,7 @@ job_flavour = '"workday"'
 
 
 #Width measurement and h21 modulation:
-gain_vals = [1e17, 1e19]
+gain_vals = [1e18, 3e18, 1e19]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)

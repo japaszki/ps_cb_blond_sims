@@ -63,7 +63,7 @@ working_dir = os.getcwd() + '/'
 #     peak_bb[run] = data['cbfb_usb_mag'][0] + data['cbfb_lsb_mag'][0]
 # =============================================================================
 
-#Get data for peak detector runs:
+#Get data for width detector runs:
 scans_dir = '/scans/cbfb_response_scan_width/'
 peak_pos_amp = np.empty((N_runs, N_modes))
 peak_width_amp = np.empty((N_runs, N_modes))
