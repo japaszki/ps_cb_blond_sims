@@ -51,28 +51,30 @@ base_quad_width_mode_amp = data['width_mode_amp']
 
 #Paramter scans with feedback:
 
-#Get data for dipole runs:
-dipole_fb_gains = np.empty(N_runs_fb)
-dipole_fb_phases = np.empty(N_runs_fb)
-dipole_exc_dipole_sideband_mag = np.empty(N_runs_fb)
-dipole_exc_quad_sideband_mag = np.empty(N_runs_fb)
-dipole_exc_pos_amp = np.empty((N_runs_fb, N_modes))
-dipole_exc_width_amp = np.empty((N_runs_fb, N_modes))
-
-for run in range(N_runs_fb):
-    run_dir = working_dir + scans_dir + 'dipole_run' + str(run+1) + '/'
-    print('Reading dipole run ' + str(run))
-    
-    with open(run_dir + 'results.pickle', 'rb') as f:
-        data = pickle.load(f)
-     
-    dipole_fb_gains[run] = np.abs(data['params'].cbfb_params['gain'][0][0])
-    dipole_fb_phases[run] = np.angle(data['params'].cbfb_params['gain'][0][0])
-    
-    dipole_exc_pos_amp[run, :] = data['pos_mode_amp']
-    dipole_exc_width_amp[run, :] = data['width_mode_amp']
-
-dipole_unique_gains = np.unique(dipole_fb_gains.round(decimals=8))
+# =============================================================================
+# #Get data for dipole runs:
+# dipole_fb_gains = np.empty(N_runs_fb)
+# dipole_fb_phases = np.empty(N_runs_fb)
+# dipole_exc_dipole_sideband_mag = np.empty(N_runs_fb)
+# dipole_exc_quad_sideband_mag = np.empty(N_runs_fb)
+# dipole_exc_pos_amp = np.empty((N_runs_fb, N_modes))
+# dipole_exc_width_amp = np.empty((N_runs_fb, N_modes))
+# 
+# for run in range(N_runs_fb):
+#     run_dir = working_dir + scans_dir + 'dipole_run' + str(run+1) + '/'
+#     print('Reading dipole run ' + str(run))
+#     
+#     with open(run_dir + 'results.pickle', 'rb') as f:
+#         data = pickle.load(f)
+#      
+#     dipole_fb_gains[run] = np.abs(data['params'].cbfb_params['gain'][0][0])
+#     dipole_fb_phases[run] = np.angle(data['params'].cbfb_params['gain'][0][0])
+#     
+#     dipole_exc_pos_amp[run, :] = data['pos_mode_amp']
+#     dipole_exc_width_amp[run, :] = data['width_mode_amp']
+# 
+# dipole_unique_gains = np.unique(dipole_fb_gains.round(decimals=8))
+# =============================================================================
 
 #Get data for quadrupole runs:
 quad_fb_gains = np.empty(N_runs_fb)
@@ -101,23 +103,25 @@ try:
 except:
     pass
 
-#Relative mode amplitude after CBFB on:
-for mode in plot_modes:
-    plt.figure('dipole_amp_vs_phase')
-    for i in range(dipole_unique_gains.shape[0]):
-        plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
-        phase_plt = dipole_fb_phases[plot_indices]
-        osc_plt = dipole_exc_pos_amp[plot_indices, mode] / base_dipole_pos_mode_amp[mode]
-        sort_indices = np.argsort(phase_plt)
-        
-        plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
-                     label='Gain = ' + str(dipole_unique_gains[i]))
-    plt.legend(loc=0, fontsize='medium')
-    plt.xlabel('CBFB phase [rad]')
-    plt.ylabel('Relative oscillation amplitude')
-    plt.title('Dipole mode ' + str(mode))
-    plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_mode_' + str(mode) + '.png')
-    plt.close()
+# =============================================================================
+# #Relative mode amplitude after CBFB on:
+# for mode in plot_modes:
+#     plt.figure('dipole_amp_vs_phase')
+#     for i in range(dipole_unique_gains.shape[0]):
+#         plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
+#         phase_plt = dipole_fb_phases[plot_indices]
+#         osc_plt = dipole_exc_pos_amp[plot_indices, mode] / base_dipole_pos_mode_amp[mode]
+#         sort_indices = np.argsort(phase_plt)
+#         
+#         plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+#                      label='Gain = ' + str(dipole_unique_gains[i]))
+#     plt.legend(loc=0, fontsize='medium')
+#     plt.xlabel('CBFB phase [rad]')
+#     plt.ylabel('Relative oscillation amplitude')
+#     plt.title('Dipole mode ' + str(mode))
+#     plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_mode_' + str(mode) + '.png')
+#     plt.close()
+# =============================================================================
 
 for mode in plot_modes:
     plt.figure('quad_amp_vs_phase')
@@ -136,23 +140,25 @@ for mode in plot_modes:
     plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/quad_amp_vs_phase_mode_' + str(mode) + '.png')
     plt.close()
     
-#Amplitude of all mode summed:
-plt.figure('dipole_amp_vs_phase_all_modes')
-for i in range(dipole_unique_gains.shape[0]):
-    plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
-    phase_plt = dipole_fb_phases[plot_indices]
-    osc_plt = np.power(np.sum(np.power(dipole_exc_pos_amp[plot_indices, :], 2), axis=1), 0.5) / \
-        np.power(np.sum(np.power(base_dipole_pos_mode_amp[:], 2)), 0.5)
-    sort_indices = np.argsort(phase_plt)
-    
-    plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
-                  label='Gain = ' + str(dipole_unique_gains[i]))
-plt.legend(loc=0, fontsize='medium')
-plt.xlabel('CBFB phase [rad]')
-plt.ylabel('Relative oscillation amplitude')
-plt.title('All dipole modes')
-plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_all_modes.png')
-plt.close()
+# =============================================================================
+# #Amplitude of all mode summed:
+# plt.figure('dipole_amp_vs_phase_all_modes')
+# for i in range(dipole_unique_gains.shape[0]):
+#     plot_indices = np.isclose(dipole_fb_gains, dipole_unique_gains[i], rtol=1e-3)
+#     phase_plt = dipole_fb_phases[plot_indices]
+#     osc_plt = np.power(np.sum(np.power(dipole_exc_pos_amp[plot_indices, :], 2), axis=1), 0.5) / \
+#         np.power(np.sum(np.power(base_dipole_pos_mode_amp[:], 2)), 0.5)
+#     sort_indices = np.argsort(phase_plt)
+#     
+#     plt.semilogy(phase_plt[sort_indices], osc_plt[sort_indices], \
+#                   label='Gain = ' + str(dipole_unique_gains[i]))
+# plt.legend(loc=0, fontsize='medium')
+# plt.xlabel('CBFB phase [rad]')
+# plt.ylabel('Relative oscillation amplitude')
+# plt.title('All dipole modes')
+# plt.savefig(working_dir + 'cbfb_gain_phase_scan_plots/dipole_amp_vs_phase_all_modes.png')
+# plt.close()
+# =============================================================================
 
 plt.figure('quad_amp_vs_phase_all_modes')
 for i in range(quad_unique_gains.shape[0]):
