@@ -12,6 +12,7 @@ import scipy.interpolate
 import cic
 import iir
 import cavity_model
+from coupled_bunch_diag import bunch_statistics
 
 class feedback:
     def __init__(self, beam, ring, tracker, cbfb_params, rf_params):
@@ -94,7 +95,9 @@ class feedback:
             #Measure bunch width in each bucket:
             for i in range(21):
                 particle_indices = (self.beam.dt >= i * bucket_length) & (self.beam.dt < (i+1) * bucket_length)
-                self.bucket_width[i] = bm.std(self.beam.dt[particle_indices])
+                bunch_result = bunch_statistics(self.beam.dt[particle_indices], \
+                                                self.beam.dE[particle_indices], method='mean_std')
+                self.bucket_width[i] = 2 * bunch_result['dt_std']
                 
             #Resample to DSP sample rate:
             bucket_dt = np.linspace(0, turn_length * 20 / 21, 21)
