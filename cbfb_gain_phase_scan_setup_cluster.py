@@ -59,10 +59,10 @@ params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
 params.cbfb_params = {'N_channels' : 1,
-                      'h_in' : [20],
+                      'h_in' : [1],
                       'h_out' : [1],
                       'active' : [False],
-                      'sideband_swap' : [True],
+                      'sideband_swap' : [False],
                       'gain' : [np.zeros(params.N_t+1, complex)],
                       'pre_filter' : 'none',
                       'post_filter' : 'none'}
@@ -74,7 +74,7 @@ finemet_h = resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt
 
 params.rf_params = {'dt' : finemet_dt, 
                     'impulse_response' : finemet_h, 
-                    'max_voltage' : 1e8,#1e5, 
+                    'max_voltage' : 1e5, 
                     'output_delay' : 1e-8,
                     'history_length' : 1e-3}
 
@@ -214,7 +214,7 @@ job_flavour = '"workday"'
 
 
 #Width measurement and h21 modulation:
-gain_vals = [1e18, 3e18, 1e19]
+gain_vals = [1e18]#, 3e18, 1e19]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)

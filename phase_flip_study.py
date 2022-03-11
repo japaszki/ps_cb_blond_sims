@@ -9,9 +9,12 @@
 
 from __future__ import division
 from __future__ import print_function
-import os
 from builtins import str
 import numpy as np
+import pylab as plt
+import pickle
+import os
+from run_cb_sim import run_cb_sim
 from cavity_model import resonator_impulse_response
 from scipy.constants import c
 from blond.impedances.impedance_sources import Resonators
@@ -25,12 +28,12 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 20000     # Number of turns to track
+params.N_t = 25000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
 params.n_macroparticles = 1e3
-params.sync_momentum = 15e9# [eV]
+params.sync_momentum = 15e9 # [eV]
                         
 # Machine and RF parameters
 radius = 100.0
@@ -59,10 +62,10 @@ params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
 params.cbfb_params = {'N_channels' : 1,
-                      'h_in' : [1],
+                      'h_in' : [20],
                       'h_out' : [1],
                       'active' : [False],
-                      'sideband_swap' : [False],
+                      'sideband_swap' : [True],
                       'gain' : [np.zeros(params.N_t+1, complex)],
                       'pre_filter' : 'none',
                       'post_filter' : 'none'}
@@ -75,11 +78,11 @@ finemet_h = resonator_impulse_response(2*np.pi*finemet_f0, finemet_Q, finemet_dt
 params.rf_params = {'dt' : finemet_dt, 
                     'impulse_response' : finemet_h, 
                     'max_voltage' : 1e5, 
-                    'output_delay' : 1e-5,
+                    'output_delay' : 1e-8,
                     'history_length' : 1e-3}
 
 params.start_cbfb_turn = 12000
-params.end_cbfb_turn = 20000
+params.end_cbfb_turn = 25000
 params.cbfb_active_mask = [True]
 
 params.fb_diag_dt = 25
@@ -89,9 +92,8 @@ params.fb_diag_start_delay = 100
 # Excitation parameters:
 params.exc_v = np.zeros(params.N_t+1)
 params.fs_exc = 442.07
+params.exc_delta_freq = 2*params.fs_exc
 params.exc_harmonic = 20
-params.exc_mod_harm = 0
-params.exc_mod_phase = np.pi/2
 
 #Simulation parameters
 params.profile_plot_bunch = 0
@@ -100,8 +102,8 @@ params.phase_plot_max_dE = 100e6
 params.tomo_n_slices = 10000
 params.tomo_dt = 10
 params.fft_n_slices = 64
-params.fft_start_turn = 14000
-params.fft_end_turn = 20000
+params.fft_start_turn = 17000
+params.fft_end_turn = 25000
 params.fft_plot_harmonics = [20]
 params.fft_span_around_harmonic = 6*params.fs_exc
 
@@ -111,60 +113,36 @@ params.N_plt_modes = 4
 
 params.cbfb_mag_window = 3001
 
-N_freqs = 8
-N_voltages = 5
-voltage_vals = np.linspace(5e2, 1e4, N_voltages)
-freq_vals = params.fs_exc * np.linspace(1, 2, N_freqs)
+quad_exc_v = 6e3
+params.exc_v[0:10000] = quad_exc_v
 
-#Arrange 2D grid of voltage and frequency values:
-[voltage_2d, freq_2d] = np.meshgrid(voltage_vals, freq_vals)
-
-#Convert to 1D arrays, with one run of zero excitation to use as reference:
-voltage_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(voltage_2d)))
-freq_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(freq_2d)))
-
-N_runs = voltage_runs.shape[0]
+this_directory = os.path.dirname(os.path.realpath(__file__)) + '/'
+scans_dir = '/scans/phase_flip_study/'
 
 working_dir = os.getcwd()
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 job_flavour = '"workday"'
 
+params.exc_mod_harm = 0
+params.exc_mod_phase = np.pi/2
+params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = 0
 
-#Baseline CBFB parameters:
-# scans_dir = '/scans/cbfb_response_scan_baseline/'
-# params.cbfb_params['pre_filter'] = 'none'
-
-# for run in range(N_runs):
-#     run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
-    
-#     params.exc_v[0:10000] = voltage_runs[run]
-#     params.exc_delta_freq = freq_runs[run]
-    
-#     setup_run(run_dir, source_dir, params, job_flavour)
+run_dir = working_dir + scans_dir + 'run_ref' + '/'
+setup_run(run_dir, source_dir, params, job_flavour)
 
 
-#Peak detector and h21 modulation:
-scans_dir = '/scans/cbfb_response_scan_peak/'
-params.cbfb_params['pre_filter'] = 'peak'
 
-#Dipole mode runs:
-for run in range(N_runs):
-    run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
-    
-    params.exc_v[0:10000] = voltage_runs[run]
-    params.exc_delta_freq = freq_runs[run]
-    
-    setup_run(run_dir, source_dir, params, job_flavour)
+params.exc_mod_harm = 0
+params.exc_mod_phase = np.pi/2
+params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = -quad_exc_v
 
-scans_dir = '/scans/cbfb_response_scan_width/'
-params.cbfb_params['pre_filter'] = 'width'
+run_dir = working_dir + scans_dir + 'run_h20_simple' + '/'
+setup_run(run_dir, source_dir, params, job_flavour)
 
-#Dipole mode runs:
-for run in range(N_runs):
-    run_dir = working_dir + scans_dir + 'run' + str(run) + '/'
-    
-    params.exc_v[0:10000] = voltage_runs[run]
-    params.exc_delta_freq = freq_runs[run]
-    
-    setup_run(run_dir, source_dir, params, job_flavour)
 
+params.exc_mod_harm = 21
+params.exc_mod_phase = 0
+params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = -quad_exc_v
+
+run_dir = working_dir + scans_dir + 'run_h20_h21_mod' + '/'
+setup_run(run_dir, source_dir, params, job_flavour)

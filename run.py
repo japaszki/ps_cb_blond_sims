@@ -32,8 +32,8 @@ from blond.utils import bmath as bm
 class sim_params:
     pass
 
-# os.chdir('scans/cbfb_width_h21_gain_phase_scan/quad_run3/')
-# os.chdir('scans/phase_flip_study/run/')
+# os.chdir('scans/cbfb_width_h21_gain_phase_scan/quad_run6/')
+# os.chdir('scans/phase_flip_study/run_h20_h21_mod/')
 
 
 working_dir = os.getcwd()

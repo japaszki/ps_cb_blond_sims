@@ -169,9 +169,6 @@ class coupled_bunch_diag:
             plt.figure('bunch_dE', figsize=(8,6))
             ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
             ax.plot(self.bunch_pos_dt[:, line], self.bunch_pos_dE[:,line], label='Mean bunch energy offset')
-            ax.plot(self.bunch_pos_dt[:, line], 100*output_spline_all_chans(self.bunch_pos_dt[:, line]),\
-                    label='100x LLRF output signal')
-            ax.plot(self.cbfb.finemet_dt, 100*self.cbfb.finemet_v, label='100x cavity voltage')
             ax.set_xlabel("Time [s]")
             ax.set_ylabel("dE [eV]")
             plt.title('Turn = ' + str(turn))
@@ -180,21 +177,54 @@ class coupled_bunch_diag:
             plt.savefig(self.dirname + '/bunch_dE_turn_' + str(turn) + '.png')
             plt.close()
             
+            plt.figure('kick', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
+            ax.plot(self.bunch_pos_dt[:, line], output_spline_all_chans(self.bunch_pos_dt[:, line]),\
+                    label='LLRF output signal')
+            ax.plot(self.cbfb.finemet_dt, self.cbfb.finemet_v, label='Cavity voltage')
+            ax.set_xlabel("Time [s]")
+            ax.set_ylabel("V [V]")
+            plt.title('Turn = ' + str(turn))
+            ax.legend()
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/kick_turn_' + str(turn) + '.png')
+            plt.close()
+            
             #Plot bunch energy spread vs kick gradient:                
             plt.figure('bunch_sE', figsize=(8,6))
             ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
             ax.plot(self.bunch_pos_dt[:, line], \
                     (self.bunch_width_dE[:,line] - np.mean(self.bunch_width_dE[:,line])),\
                         label='Bunch energy spread deviation')
-            ax.plot(self.bunch_pos_dt[:, line], 1e-6*output_spline_all_chans(self.bunch_pos_dt[:, line], 1),\
-                    label='1e-6 x kick gradient at bunch centre')
-            ax.plot(self.cbfb.dsp_sample_dt, 1e-7*self.cbfb.beam_signal_filt, label='1e-7x filtered beam signal')
             ax.set_xlabel("Time [s]")
-            ax.set_ylabel("dE [eV]")
+            ax.set_ylabel("σE [eV]")
             plt.title('Turn = ' + str(turn))
             ax.legend()
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             plt.savefig(self.dirname + '/bunch_sigmaE_turn_' + str(turn) + '.png')
+            plt.close()
+            
+            plt.figure('kick_gradient', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
+            ax.plot(self.bunch_pos_dt[:, line], output_spline_all_chans(self.bunch_pos_dt[:, line], 1),\
+                    label='Kick gradient at bunch centre')
+            ax.set_xlabel("Time [s]")
+            ax.set_ylabel("dV/dt [V/s]")
+            plt.title('Turn = ' + str(turn))
+            ax.legend()
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/kick_gradient_turn_' + str(turn) + '.png')
+            plt.close()
+            
+            plt.figure('beam_filt', figsize=(8,6))
+            ax = plt.axes([0.15, 0.1, 0.8, 0.8]) 
+            ax.plot(self.cbfb.dsp_sample_dt, self.cbfb.beam_signal_filt, label='Filtered beam signal')
+            ax.set_xlabel("Time [s]")
+            ax.set_ylabel("Value")
+            plt.title('Turn = ' + str(turn))
+            ax.legend()
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.savefig(self.dirname + '/beam_filt_turn_' + str(turn) + '.png')
             plt.close()
     
     def plot_size_width(self, start_turn, end_turn): 
