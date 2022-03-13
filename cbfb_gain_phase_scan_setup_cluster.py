@@ -171,50 +171,49 @@ job_flavour = '"workday"'
 
 
 
-# =============================================================================
-# #Peak detector and h21 modulation:
-# gain_vals = [5e-4, 5e-3]
-# 
-# #Arrange 2D grid of gain and phase values:
-# [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
-# 
-# #Convert to 1D arrays, with one run of zero gain to use as reference:
-# cbfb_gain_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_gain_2d)))
-# cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)))
-# 
-# N_runs = cbfb_gain_runs.shape[0]
-# 
-# 
-# scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
-# 
-# params.cbfb_params['pre_filter'] = 'peak'
-# params.cbfb_params['post_filter'] = 'h21_mod_h256_clk'
-# 
-# #Dipole mode runs:
-# params.exc_v[0:10000] = dipole_exc_v
-# for run in range(N_runs):
-#     run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
-#     
-#     params.exc_delta_freq = params.fs_exc
-#     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
-#     
-#     setup_run(run_dir, source_dir, params, job_flavour)
-#     
-# #Quadrupole mode runs:
-# params.exc_v[0:10000] = quad_exc_v
-# for run in range(N_runs):
-#     run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
-#     
-#     #Set swept parameters for this run:
-#     params.exc_delta_freq = 2*params.fs_exc
-#     params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
-#     
-#     setup_run(run_dir, source_dir, params, job_flavour)
-# =============================================================================
+#Peak detector and h21 modulation:
+gain_vals = [1e-3]
+
+#Arrange 2D grid of gain and phase values:
+[cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
+
+#Convert to 1D arrays, with one run of zero gain to use as reference:
+cbfb_gain_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_gain_2d)))
+cbfb_phase_runs = np.concatenate((np.zeros(1), np.ndarray.flatten(cbfb_phase_2d)))
+
+N_runs = cbfb_gain_runs.shape[0]
 
 
-#Width measurement and h21 modulation:
-gain_vals = [1e18]#, 3e18, 1e19]
+scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
+
+params.cbfb_params['pre_filter'] = 'peak'
+params.cbfb_params['post_filter'] = 'h21_mod_h256_clk'
+
+#Dipole mode runs:
+params.exc_v[0:10000] = dipole_exc_v
+for run in range(N_runs):
+    run_dir = working_dir + scans_dir + 'dipole_run' + str(run) + '/'
+    
+    params.exc_delta_freq = params.fs_exc
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+    
+    setup_run(run_dir, source_dir, params, job_flavour)
+    
+#Quadrupole mode runs:
+params.exc_v[0:10000] = quad_exc_v
+for run in range(N_runs):
+    run_dir = working_dir + scans_dir + 'quad_run' + str(run) + '/'
+    
+    #Set swept parameters for this run:
+    params.exc_delta_freq = 2*params.fs_exc
+    params.cbfb_params['gain'][0][:] = cbfb_gain_runs[run] * np.exp(1j * cbfb_phase_runs[run])
+    
+    setup_run(run_dir, source_dir, params, job_flavour)
+
+
+
+# #Width measurement and h21 modulation:
+gain_vals = [1e15]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
