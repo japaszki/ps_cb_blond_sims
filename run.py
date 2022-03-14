@@ -32,14 +32,14 @@ from blond.utils import bmath as bm
 class sim_params:
     pass
 
-# os.chdir('scans/cbfb_peak_h21_gain_phase_scan/quad_run1/')
+# os.chdir('scans/cbfb_peak_h21_gain_phase_scan/quad_run16/')
 # os.chdir('scans/phase_flip_study/run_h20_h21_mod/')
 
 
 working_dir = os.getcwd()
 output_dir = working_dir + '/sim_outputs/'
 print("Working directory is " + working_dir)
-
+ 
 #Load input parameters:
 print("Loading input paramters from " + working_dir + '/input_params.pickle ...')
 with open(working_dir + '/input_params.pickle', 'rb') as f:

@@ -25,7 +25,7 @@ class sim_params:
 params = sim_params()
 
 # Tracking details
-params.N_t = 20000     # Number of turns to track
+params.N_t = 30000     # Number of turns to track
 
 # Beam parameters
 params.n_particles = 1e10
@@ -79,7 +79,7 @@ params.rf_params = {'dt' : finemet_dt,
                     'history_length' : 1e-3}
 
 params.start_cbfb_turn = 12000
-params.end_cbfb_turn = 20000
+params.end_cbfb_turn = 30000
 params.cbfb_active_mask = [True]
 
 params.fb_diag_dt = 25
@@ -172,7 +172,7 @@ job_flavour = '"workday"'
 
 
 #Peak detector and h21 modulation:
-gain_vals = [1e-3]
+gain_vals = [1e-6, 3e-6]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
@@ -213,7 +213,7 @@ for run in range(N_runs):
 
 
 # #Width measurement and h21 modulation:
-gain_vals = [1e15]
+gain_vals = [1e14, 3e14]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)

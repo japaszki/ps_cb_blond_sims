@@ -114,7 +114,7 @@ params.cbfb_mag_window = 3001
 N_freqs = 8
 N_voltages = 5
 voltage_vals = np.linspace(5e2, 1e4, N_voltages)
-freq_vals = params.fs_exc * np.linspace(1, 2, N_freqs)
+freq_vals = params.fs_exc * np.linspace(0.8, 2.5, N_freqs)
 
 #Arrange 2D grid of voltage and frequency values:
 [voltage_2d, freq_2d] = np.meshgrid(voltage_vals, freq_vals)
