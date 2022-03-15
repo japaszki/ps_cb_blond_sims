@@ -93,7 +93,6 @@ params.fb_diag_start_delay = 100
 params.exc_v = np.zeros(params.N_t+1)
 params.fs_exc = 442.07
 params.exc_delta_freq = 2*params.fs_exc
-params.exc_harmonic = 20
 
 #Simulation parameters
 params.profile_plot_bunch = 0
@@ -123,6 +122,7 @@ working_dir = os.getcwd()
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 job_flavour = '"workday"'
 
+params.exc_harmonic = 20
 params.exc_mod_harm = 0
 params.exc_mod_phase = np.pi/2
 params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = 0
@@ -131,7 +131,7 @@ run_dir = working_dir + scans_dir + 'run_ref' + '/'
 setup_run(run_dir, source_dir, params, job_flavour)
 
 
-
+params.exc_harmonic = 20
 params.exc_mod_harm = 0
 params.exc_mod_phase = np.pi/2
 params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = -quad_exc_v
@@ -140,9 +140,10 @@ run_dir = working_dir + scans_dir + 'run_h20_simple' + '/'
 setup_run(run_dir, source_dir, params, job_flavour)
 
 
+params.exc_harmonic = 1
 params.exc_mod_harm = 21
 params.exc_mod_phase = 0
 params.exc_v[params.start_cbfb_turn:params.end_cbfb_turn] = -quad_exc_v
 
-run_dir = working_dir + scans_dir + 'run_h20_h21_mod' + '/'
+run_dir = working_dir + scans_dir + 'run_h1_h21_mod' + '/'
 setup_run(run_dir, source_dir, params, job_flavour)
