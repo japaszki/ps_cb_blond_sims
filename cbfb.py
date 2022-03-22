@@ -33,7 +33,7 @@ class feedback:
         if self.pre_filter == 'none':
             self.h_samp_adc = 64
         elif self.pre_filter == 'peak':
-            self.samples_per_bucket = 20
+            self.samples_per_bucket = 12
             self.h_samp_adc = 21 * self.samples_per_bucket
             self.bucket_max = np.zeros(21)
         elif self.pre_filter == 'width':
