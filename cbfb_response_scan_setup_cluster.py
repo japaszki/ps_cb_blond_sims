@@ -54,7 +54,7 @@ params.filter_front_wake = 0.5
 #Beam parameters:
 params.n_bunches = 21
 params.bunch_spacing_buckets = 1
-params.bunch_length = 4*0.5/c
+params.bunch_length = 4*1/c
 params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
