@@ -112,7 +112,7 @@ params.N_plt_modes = 4
 params.cbfb_mag_window = 3001
 
 dipole_exc_v = 2e3
-quad_exc_v = 6e3
+quad_exc_v = 4e3
 
 N_phases = 32
 phase_vals = np.linspace(0, 2*np.pi, N_phases)
@@ -172,7 +172,7 @@ job_flavour = '"workday"'
 
 
 #Peak detector and h21 modulation:
-gain_vals = [1e-6, 3e-6]
+gain_vals = [2e-6, 5e-6]
 
 #Arrange 2D grid of gain and phase values:
 [cbfb_gain_2d, cbfb_phase_2d] = np.meshgrid(gain_vals, phase_vals)
