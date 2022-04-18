@@ -62,7 +62,9 @@ params.cbfb_params = {'N_channels' : 1,
                       'h_out' : [1],
                       'active' : [False],
                       'sideband_swap' : [True],
-                      'gain' : [np.zeros(params.N_t+1, complex)]}
+                      'gain' : [np.zeros(params.N_t+1, complex)],
+                      'pre_filter' : 'none',
+                      'post_filter' : 'none'}
 
 params.cbfb_params['gain'][0][:] = 1e-3 * np.exp(2j * np.pi * 0.26)
 
@@ -91,6 +93,7 @@ params.exc_v[:] = 1.5e3
 params.fs_exc = 442.07
 params.exc_mod_harm = 21
 params.exc_mod_phase = 0 #np.pi/2 for no modulation
+params.exc_waveform = 'saw'
 
 #Simulation parameters
 params.profile_plot_bunch = 0

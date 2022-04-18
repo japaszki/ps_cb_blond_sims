@@ -50,6 +50,8 @@ class feedback:
             self.h_samp_dsp = 64
         elif self.post_filter == 'h21_mod_h256_clk':
             self.h_samp_dsp = 256
+        elif self.post_filter == 'h21_mod_h256_clk_saw':
+            self.h_samp_dsp = 256
         
         #Initialise each DSP channel:
         self.dipole_channels = []
@@ -123,9 +125,15 @@ class feedback:
         #Perform post_filtering of output signal:
         if self.post_filter == 'none':
             self.output_sum_filt = self.output_sum
-        elif self.post_filter == 'h21_mod_h64_clk' or self.post_filter == 'h21_mod_h256_clk':
+        elif self.post_filter == 'h21_mod_h64_clk' or \
+            self.post_filter == 'h21_mod_h256_clk' or \
+                self.post_filter == 'h21_mod_h256_clk_saw':
             nco_phase = 2*np.pi*np.arange(self.h_samp_dsp)/self.h_samp_dsp
-            self.output_sum_filt = bm.mul(self.output_sum, np.sin(21 * nco_phase))
+            
+            if self.post_filter == 'h21_mod_h256_clk_saw':
+                self.output_sum_filt = bm.mul(self.output_sum, np.mod(21*nco_phase + np.pi, 2*np.pi) - np.pi)
+            else :
+                self.output_sum_filt = bm.mul(self.output_sum, np.sin(21 * nco_phase))
             
         #Update Finemet model:
         self.finemet.update(self.output_sum_filt, self.turn_start_time + self.dsp_sample_dt)

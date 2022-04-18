@@ -92,6 +92,7 @@ params.fs_exc = 442.07
 params.exc_harmonic = 20
 params.exc_mod_harm = 0
 params.exc_mod_phase = np.pi/2
+params.exc_waveform = 'sine'
 
 #Simulation parameters
 params.profile_plot_bunch = 0
@@ -187,7 +188,7 @@ N_runs = cbfb_gain_runs.shape[0]
 scans_dir = '/scans/cbfb_peak_h21_gain_phase_scan/'
 
 params.cbfb_params['pre_filter'] = 'peak'
-params.cbfb_params['post_filter'] = 'h21_mod_h256_clk'
+params.cbfb_params['post_filter'] = 'h21_mod_h256_clk_saw'
 
 #Dipole mode runs:
 params.exc_v[0:10000] = dipole_exc_v

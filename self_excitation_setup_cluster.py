@@ -53,7 +53,7 @@ params.filter_front_wake = 0.5
 #Beam parameters:
 params.n_bunches = 21
 params.bunch_spacing_buckets = 1
-params.intensity_list = [84*2.6e11/params.n_bunches] * params.n_bunches
+params.intensity_list = [3*   84*2.6e11/params.n_bunches] * params.n_bunches
 params.minimum_n_macroparticles = [1e5] * params.n_bunches
 
 params.cbfb_params = {'N_channels' : 1,
@@ -78,7 +78,7 @@ params.rf_params = {'dt' : finemet_dt,
                     'output_delay' : 1e-8,
                     'history_length' : 1e-6}
 
-params.start_cbfb_turn = 100000
+params.start_cbfb_turn = 500#100000
 params.end_cbfb_turn = 120000
 params.cbfb_active_mask = [True] #Only these channels get activated on SCBFB
 
@@ -116,7 +116,7 @@ params.cbfb_mag_window = 3001
 job_flavour = '"nextweek"'
 
 working_dir = os.getcwd()
-scans_dir = '/scans/self_exc_test/'
+scans_dir = '/scans/self_exc_test_quad/'
 source_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
 
 N_runs = 3

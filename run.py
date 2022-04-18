@@ -33,7 +33,7 @@ class sim_params:
     pass
 
 # os.chdir('scans/cbfb_peak_h21_gain_phase_scan/quad_run16/')
-# os.chdir('scans/phase_flip_study/run_h20_h21_mod/')
+# os.chdir('scans/self_exc_test_quad/run0/')
 
 
 working_dir = os.getcwd()
@@ -167,8 +167,12 @@ for turn in range(1, params.N_t+1):
     mod_freq = params.exc_mod_harm * f_rev
         
     particle_t = turn_start_time + beam.dt
-    beam.dE += params.exc_v[turn] * bm.sin(2*np.pi*exc_freq*particle_t) * \
-        bm.sin(2*np.pi*mod_freq*particle_t + params.exc_mod_phase)
+    
+    if params.exc_waveform == 'sine':
+        mod_carrier = bm.sin(2*np.pi*mod_freq*particle_t + params.exc_mod_phase)
+    elif params.exc_waveform == 'saw':
+        mod_carrier = np.mod(2*mod_freq*particle_t + params.exc_mod_phase/np.pi + 1 , 2) - 1
+    beam.dE += params.exc_v[turn] * bm.sin(2*np.pi*exc_freq*particle_t) * mod_carrier
     turn_start_time += turn_length
     
     #Record CBFB baseband signals:
